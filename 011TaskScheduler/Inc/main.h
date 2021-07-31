@@ -21,30 +21,42 @@
 #define T1_STACK_START		((SRAM_END) - (1 * (TASK_STACK_SIZE)))
 #define T2_STACK_START		((SRAM_END) - (2 * (TASK_STACK_SIZE)))
 #define T3_STACK_START		((SRAM_END) - (3 * (TASK_STACK_SIZE)))
-#define SCHED_STACK_START	((SRAM_END) - (4 * (TASK_STACK_SIZE)))
-#define SCHED_STACK_END		((SRAM_END) - (4 * (TASK_STACK_SIZE)) - (SCHED_STACK_SIZE))
+#define T4_STACK_START		((SRAM_END) - (4 * (TASK_STACK_SIZE)))
+#define SCHED_STACK_START	((SRAM_END) - (5 * (TASK_STACK_SIZE)))
+#define SCHED_STACK_END		((SCHED_STACK_START) - (SCHED_STACK_SIZE))
 
-#define MAX_TASKS			4
+#define MAX_TASKS			5
+
+#define TASK_READY			0x00
+#define TASK_BLOCKED		0xFF
 
 #define TICK_HZ				1000U
 #define SYSTICK_CLK			16000000U // HSI: 16 MHz
 #define SYST_RVR			((uint32_t*)0xE000E014U)
 #define SYST_CSR			((uint32_t*)0xE000E010U)
 
+#define ICSR				((uint32_t*)0xE000ED04U)
 #define SHCSR				((uint32_t*)0xE000ED24U)
 
 #define INIT_XPSR			0x01000000U // Keep T-bit
 
+#define INTERRUPT_DISABLE()	__asm volatile ("CPSID i")
+#define INTERRUPT_ENABLE()	__asm volatile ("CPSIE i")
+
 // Function prototypes
-void task0_handler(void);
+void task0_handler(void); // Idle Task
 void task1_handler(void);
 void task2_handler(void);
 void task3_handler(void);
+void task4_handler(void);
 void enable_processor_faults(void);
 void init_systick(uint32_t);
+void schedule(void);
 __attribute__ ((naked)) void init_sched_stack(uint32_t);
-void init_tasks_stack(void);
+void init_tasks(void);
+void unblock_tasks(void);
 uint32_t get_psp_value(void);
 __attribute__ ((naked)) void switch_to_psp(void);
+void task_delay(uint32_t);
 
 #endif /* MAIN_H_ */

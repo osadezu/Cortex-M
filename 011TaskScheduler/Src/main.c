@@ -1,5 +1,5 @@
 /*
- * This program runs several alternating user tasks while using SysTick handler as a task scheduler.
+ * This program runs several alternating user tasks while using SysTick and PendSV for task scheduling.
  *
  * Written for STM32F407G on Eclipse based STM32CubeIDE
  * Dev Board: STM32F407G-DISC1
@@ -15,10 +15,19 @@
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
 
-uint32_t psp_of_task[MAX_TASKS] = {T0_STACK_START, T1_STACK_START, T2_STACK_START, T3_STACK_START};
-uint32_t handler_task[MAX_TASKS]; // TODO: Replace with struct
+uint8_t current_task = 1;	// Begin with task1 as idle task only runs when all tasks are blocked.
+uint32_t g_tick_count = 0;	// Global tick count for task scheduling
 
-uint8_t current_task = 0; // Begin with task0
+typedef struct // Task Control Block
+{
+	uint32_t psp;
+	uint32_t block_count;
+	uint8_t current_state;
+	void (*task_handler)(void); // Function pointer to task handler
+
+}TCB_t;
+
+TCB_t user_task[MAX_TASKS];
 
 int main(void)
 {
@@ -26,18 +35,14 @@ int main(void)
 
 	init_sched_stack(SCHED_STACK_START);
 
-	handler_task[0] = (uint32_t)task0_handler; // Green LED  - PD12
-	handler_task[1] = (uint32_t)task1_handler; // Orange LED - PD13
-	handler_task[2] = (uint32_t)task2_handler; // Red LED    - PD14
-	handler_task[3] = (uint32_t)task3_handler; // Blue LED   - PD12
-	init_tasks_stack();
+	init_tasks();
 
 	led_init();
 
 	init_systick(TICK_HZ);
 
 	switch_to_psp(); // Going to process threads
-	task0_handler(); // Manually start first task (Could use SVC to do this)
+	user_task[current_task].task_handler(); // Manually start first task (Could use SVC to do this)
 
 	/* Loop forever */
 	for(;;); // Unreachable because tasks never return
@@ -72,7 +77,23 @@ void init_systick(uint32_t tick_hz)
 
 }
 
-__attribute__ ((naked)) void SysTick_Handler(void)
+void SysTick_Handler(void)
+{
+	g_tick_count++; // Update global tick count
+
+	unblock_tasks(); // Unblock tasks if tick count has been reached
+
+	schedule(); // Set PendSV
+}
+
+void schedule(void)
+{
+	// Set PendSV
+	uint32_t *pICSR = ICSR;
+	*pICSR |= (1 << 28); // PendSV exception is pending
+}
+
+__attribute__ ((naked)) void PendSV_Handler(void)
 {
 	__asm volatile ("PUSH {LR}");		// Preserve LR
 
@@ -86,7 +107,6 @@ __attribute__ ((naked)) void SysTick_Handler(void)
 	__asm volatile ("STMDB R0!,{R4-R11}");	// Push registers to task's stack, R0 is updated with PSP
 
 	// 3. Save PSP
-//	__asm volatile ("MOV %0,R0": "=r"(psp_of_task[current_task]) ::);
 	__asm volatile ("BL save_psp");			// Save task's PSP from R0
 
 	// Retrieve context of next task
@@ -115,19 +135,39 @@ __attribute__ ((naked)) void init_sched_stack(uint32_t sched_stack_top)
 	__asm("BX LR");
 }
 
-void init_tasks_stack(void)
+void init_tasks(void)
 {
+	// Init TCB
+	user_task[0].psp = T0_STACK_START;
+	user_task[0].task_handler = task0_handler; // Idle Task
+
+	user_task[1].psp = T1_STACK_START;
+	user_task[1].task_handler = task1_handler;
+
+	user_task[2].psp = T2_STACK_START;
+	user_task[2].task_handler = task2_handler;
+
+	user_task[3].psp = T3_STACK_START;
+	user_task[3].task_handler = task3_handler;
+
+	user_task[4].psp = T4_STACK_START;
+	user_task[4].task_handler = task4_handler;
+
 	uint32_t *pPSP;
 
 	for(int i = 0; i < MAX_TASKS; i++)
 	{
-		pPSP = (uint32_t*)psp_of_task[i];
+		// Init TCB
+		user_task[i].current_state = TASK_READY;
+
+		// Init Task Stack
+		pPSP = (uint32_t*)user_task[i].psp;
 
 		pPSP--; // Decrement first (Stack: full descending)
 		*pPSP = INIT_XPSR;
 
 		pPSP--;
-		*pPSP = handler_task[i]; // PC
+		*pPSP = (uint32_t)user_task[i].task_handler; // PC
 
 		pPSP--;
 		*pPSP = 0xFFFFFFFD; // LR: return to thread with PSP
@@ -138,24 +178,49 @@ void init_tasks_stack(void)
 			*pPSP = 0x00000000; // R0 - R12
 		}
 
-		psp_of_task[i] = (uint32_t)pPSP;
+		user_task[i].psp = (uint32_t)pPSP;
+	}
+}
+
+void unblock_tasks(void)
+{
+	for(int i = 1; i < MAX_TASKS; i++) // Start with Task 1 because Idle is never blocked.
+	{
+		if(user_task[i].current_state == TASK_BLOCKED)
+		{
+			if(user_task[i].block_count == g_tick_count)
+			{
+				user_task[i].current_state = TASK_READY;
+			}
+		}
 	}
 }
 
 uint32_t get_psp(void)
 {
-	return psp_of_task[current_task]; // Returned via R0 per AAPCS
+	return user_task[current_task].psp; // Returned via R0 per AAPCS
 }
 
 void save_psp(uint32_t current_psp)
 {
-	psp_of_task[current_task] = current_psp;
+	user_task[current_task].psp = current_psp;
 }
 
 void select_next_task(void)
 {
-	current_task++;
-	current_task %= MAX_TASKS; // MAX -> 0
+	uint8_t state = TASK_BLOCKED;
+
+	for(int i = 0; i < MAX_TASKS; i++)
+	{
+		current_task++;
+		current_task %= MAX_TASKS; // MAX -> 0
+		state = user_task[current_task].current_state;
+		if((current_task) && (state == TASK_READY))
+			break; // Non-idle tasks is ready
+	}
+
+	if(state == TASK_BLOCKED) // All tasks are blocked
+		current_task = 0; // Select idle task
 }
 
 __attribute__ ((naked)) void switch_to_psp(void)
@@ -177,25 +242,37 @@ __attribute__ ((naked)) void switch_to_psp(void)
 
 }
 
-void task0_handler(void)
+void task_delay(uint32_t blocked_ticks)
 {
-	while(1)
+	// This task function manipulates global variables
+	// Serialize access to globals by briefly disabling interrupts
+	INTERRUPT_DISABLE();
+
+	if(current_task) // Not idle task
 	{
-		led_on(LED_GREEN);
-		delay(DELAY_COUNT_1S);
-		led_off(LED_GREEN);
-		delay(DELAY_COUNT_1S);
+		user_task[current_task].block_count = g_tick_count + blocked_ticks;
+		user_task[current_task].current_state = TASK_BLOCKED;
+		schedule();
 	}
+
+	// Enable Interrupts
+	INTERRUPT_ENABLE();
+
+}
+
+void task0_handler(void) // Idle Task
+{
+	while(1);
 }
 
 void task1_handler(void)
 {
 	while(1)
 	{
-		led_on(LED_ORANGE);
-		delay(DELAY_COUNT_500MS);
-		led_off(LED_ORANGE);
-		delay(DELAY_COUNT_500MS);
+		led_on(LED_GREEN);
+		task_delay(1000);
+		led_off(LED_GREEN);
+		task_delay(1000);
 	}
 }
 
@@ -203,10 +280,10 @@ void task2_handler(void)
 {
 	while(1)
 	{
-		led_on(LED_RED);
-		delay(DELAY_COUNT_250MS);
-		led_off(LED_RED);
-		delay(DELAY_COUNT_250MS);
+		led_on(LED_ORANGE);
+		task_delay(500);
+		led_off(LED_ORANGE);
+		task_delay(500);
 	}
 }
 
@@ -214,10 +291,21 @@ void task3_handler(void)
 {
 	while(1)
 	{
+		led_on(LED_RED);
+		task_delay(250);
+		led_off(LED_RED);
+		task_delay(250);
+	}
+}
+
+void task4_handler(void)
+{
+	while(1)
+	{
 		led_on(LED_BLUE);
-		delay(DELAY_COUNT_125MS);
+		task_delay(125);
 		led_off(LED_BLUE);
-		delay(DELAY_COUNT_125MS);
+		task_delay(125);
 	}
 }
 
