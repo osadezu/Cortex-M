@@ -37,6 +37,8 @@ int main(void)
 {
 	enable_processor_faults();
 
+	initialise_monitor_handles(); // Initialize semihosting for
+
 	init_sched_stack(SCHED_STACK_START);
 
 	init_tasks();
@@ -44,6 +46,8 @@ int main(void)
 	led_init();
 
 	init_systick(TICK_HZ);
+
+	printf("Init done. Going to process threads.\n");
 
 	switch_to_psp(); // Going to process threads
 	user_task[current_task].task_handler(); // Manually start first task (Could use SVC to do this)
@@ -273,6 +277,7 @@ void task1_handler(void)
 {
 	while(1)
 	{
+		printf("Task1 is running.\n");
 		led_on(LED_GREEN);
 		task_delay(1000);
 		led_off(LED_GREEN);
@@ -284,6 +289,7 @@ void task2_handler(void)
 {
 	while(1)
 	{
+		printf("Task2 is running.\n");
 		led_on(LED_ORANGE);
 		task_delay(500);
 		led_off(LED_ORANGE);
@@ -295,6 +301,7 @@ void task3_handler(void)
 {
 	while(1)
 	{
+		printf("Task3 is running.\n");
 		led_on(LED_RED);
 		task_delay(250);
 		led_off(LED_RED);
@@ -306,6 +313,7 @@ void task4_handler(void)
 {
 	while(1)
 	{
+		printf("Task4 is running.\n");
 		led_on(LED_BLUE);
 		task_delay(125);
 		led_off(LED_BLUE);
@@ -315,24 +323,24 @@ void task4_handler(void)
 
 void HardFault_Handler(void)
 {
-	// printf("HardFault Exception\n");
+	printf("HardFault Exception\n");
 	while(1);
 }
 
 void UsageFault_Handler_c(void)
 {
-	// printf("UsageFault Exception\n");
+	printf("UsageFault Exception\n");
 	while(1);
 }
 
 void BusFault_Handler(void)
 {
-	// printf("BusFault Exception\n");
+	printf("BusFault Exception\n");
 	while(1);
 }
 
 void MemManage_Handler(void)
 {
-	// printf("MemFault Exception\n");
+	printf("MemFault Exception\n");
 	while(1);
 }

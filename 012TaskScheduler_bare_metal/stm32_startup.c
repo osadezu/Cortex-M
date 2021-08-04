@@ -7,13 +7,15 @@
 #define STACK_START	SRAM_END
 
 extern uint32_t _etext;
+extern uint32_t _la_data;
 extern uint32_t _sdata;
 extern uint32_t _edata;
 extern uint32_t _ebss;
 extern uint32_t _sbss;
 
-// porototype of main
+// Function Prototypes
 int main(void);
+void __libc_init_array(void);
 
 /* function prototypes of STM32F407x system exception and IRQ handlers */
 
@@ -215,7 +217,7 @@ void Reset_Handler(void)
 	uint32_t size = (uint32_t)&_edata - (uint32_t)&_sdata;
 
 	uint8_t *pDst = (uint8_t*)&_sdata; // SRAM
-	uint8_t *pSrc = (uint8_t*)&_etext; // Flash
+	uint8_t *pSrc = (uint8_t*)&_la_data; // Flash
 
 	for(uint32_t i = 0; i < size; i++)
 	{
@@ -223,7 +225,7 @@ void Reset_Handler(void)
 	}
 
 	// Initialize .bss section to zeros
-	size = &_ebss - &_sbss;
+	size = (uint32_t)&_ebss - (uint32_t)&_sbss;
 
 	pDst = (uint8_t*)&_sbss;
 
@@ -232,7 +234,8 @@ void Reset_Handler(void)
 		*pDst++ = 0;
 	}
 
-	// (Optional) Call Init. function of C std. lib. if standard libraries are used
+	// Initialize C std library (only required when if standard libraries are used)
+	__libc_init_array();
 
 	// Call main()
 	main();

@@ -44,6 +44,9 @@
 #define INTERRUPT_ENABLE()	__asm volatile ("CPSIE i")
 
 // Function prototypes
+
+extern void initialise_monitor_handles(void);
+
 void task0_handler(void); // Idle Task
 void task1_handler(void);
 void task2_handler(void);
