@@ -8,8 +8,10 @@
 #ifndef INC_STM32F407XX_H_
 #define INC_STM32F407XX_H_
 
+#include <stdint.h>
 
-// Flash and SRAM base addresses
+
+// Flash and SRAM Base Addresses
 
 #define FLASH_BASE		0x08000000U		// Main Memory
 #define ROM_BASE		0x1FFF0000U		// 30 KB
@@ -18,7 +20,7 @@
 #define SRAM_BASE		SRAM1_BASE
 
 
-// APBx and AHBx Bus Peripheral base addresses
+// APBx and AHBx Bus Peripheral Base Addresses
 
 #define PERIPH_BASE		0x40000000U
 #define APB1PERIPH_BASE	PERIPH_BASE
@@ -27,7 +29,7 @@
 #define AHB2PERIPH_BASE	0x50000000U
 
 
-// APB1 Bus Peripheral base addresses
+// APB1 Bus Peripheral Base Addresses
 
 #define SPI2_BASE		((APB1PERIPH_BASE) + 0x3800U)
 #define SPI3_BASE		((APB1PERIPH_BASE) + 0x3C00U)
@@ -40,7 +42,7 @@
 #define I2C3_BASE		((APB1PERIPH_BASE) + 0x5C00U)
 
 
-// APB2 Bus Peripheral base addresses
+// APB2 Bus Peripheral Base Addresses
 
 #define USART1_BASE		((APB2PERIPH_BASE) + 0x1000U)
 #define USART6_BASE		((APB2PERIPH_BASE) + 0x1400U)
@@ -49,7 +51,7 @@
 #define SYSCFG_BASE		((APB2PERIPH_BASE) + 0x3800U)
 
 
-// AHB1 Bus Peripheral base addresses
+// AHB1 Bus Peripheral Base Addresses
 
 #define GPIOA_BASE		((AHB1PERIPH_BASE) + 0x0000U)
 #define GPIOB_BASE		((AHB1PERIPH_BASE) + 0x0400U)
@@ -60,5 +62,123 @@
 #define GPIOG_BASE		((AHB1PERIPH_BASE) + 0x1800U)
 #define GPIOH_BASE		((AHB1PERIPH_BASE) + 0x1C00U)
 #define GPIOI_BASE		((AHB1PERIPH_BASE) + 0x2000U)
+#define RCC_BASE		((AHB1PERIPH_BASE) + 0x3800U)
+
+// Peripheral Register Definition Structures
+
+typedef struct {
+	volatile uint32_t MODER;		// GPIO port mode register
+	volatile uint32_t OTYPER;		// GPIO port output type register
+	volatile uint32_t OSPEEDR;		// GPIO port output speed register
+	volatile uint32_t PUPDR;		// GPIO port pull-up/pull-down register
+	volatile uint32_t IDR;			// GPIO port input data register
+	volatile uint32_t ODR;			// GPIO port output data register
+	volatile uint32_t BSRR;			// GPIO port bit set/reset register
+	volatile uint32_t LCKR;			// GPIO port configuration lock register
+	volatile uint32_t AFR[2];		// GPIO alternate function register (AFRL: AFR[0] + AFRH: AFR[1])
+} GPIO_RegDef_t;
+
+typedef struct {
+	volatile uint32_t CR;			// RCC clock control register
+	volatile uint32_t PLLCFGR;  	// RCC PLL configuration register
+	volatile uint32_t CFGR;			// RCC clock configuration register
+	volatile uint32_t CIR;			// RCC clock interrupt register
+	volatile uint32_t AHB1RSTR;		// RCC AHB1 peripheral reset register
+	volatile uint32_t AHB2RSTR;		// RCC AHB2 peripheral reset register
+	volatile uint32_t AHB3RSTR;		// RCC AHB3 peripheral reset register
+	uint32_t reserved0;
+	volatile uint32_t APB1RSTR;		// RCC APB1 peripheral reset register
+	volatile uint32_t APB2RSTR;		// RCC APB2 peripheral reset register
+	uint32_t reserved1;
+	uint32_t reserved2;
+	volatile uint32_t AHB1ENR;		// RCC AHB1 peripheral clock enable register
+	volatile uint32_t AHB2ENR;		// RCC AHB2 peripheral clock enable register
+	volatile uint32_t AHB3ENR;		// RCC AHB3 peripheral clock enable register
+	uint32_t reserved3;
+	volatile uint32_t APB1ENR;		// RCC APB1 peripheral clock enable register
+	volatile uint32_t APB2ENR;		// RCC APB2 peripheral clock enable register
+	uint32_t reserved4;
+	uint32_t reserved5;
+	volatile uint32_t AHB1LPENR;	// RCC AHB1 peripheral clock enable in low power mode register
+	volatile uint32_t AHB2LPENR;	// RCC AHB2 peripheral clock enable in low power mode register
+	volatile uint32_t AHB3LPENR;	// RCC AHB3 peripheral clock enable in low power mode register
+	uint32_t reserved6;
+	volatile uint32_t APB1LPENR;	// RCC APB1 peripheral clock enable in low power mode register
+	volatile uint32_t APB2LPENR;	// RCC APB2 peripheral clock enable in low power mode register
+	uint32_t reserved7;
+	uint32_t reserved8;
+	volatile uint32_t BDCR;			// RCC Backup domain control register
+	volatile uint32_t CSR;			// RCC clock control & status register
+	uint32_t reserved9;
+	uint32_t reserved10;
+	volatile uint32_t SSCGR;		// RCC spread spectrum clock generation register
+	volatile uint32_t PLLI2SCFGR;	// RCC PLLI2S configuration register
+} RCC_RegDef_t;
+
+// Peripheral Definitions
+
+#define GPIOA			((GPIO_RegDef_t*)GPIOA_BASE)
+#define GPIOB			((GPIO_RegDef_t*)GPIOB_BASE)
+#define GPIOC			((GPIO_RegDef_t*)GPIOC_BASE)
+#define GPIOD			((GPIO_RegDef_t*)GPIOD_BASE)
+#define GPIOE			((GPIO_RegDef_t*)GPIOE_BASE)
+#define GPIOF			((GPIO_RegDef_t*)GPIOF_BASE)
+#define GPIOG			((GPIO_RegDef_t*)GPIOG_BASE)
+#define GPIOH			((GPIO_RegDef_t*)GPIOH_BASE)
+#define GPIOI 			((GPIO_RegDef_t*)GPIOI_BASE)
+
+#define RCC 			((RCC_RegDef_t*)RCC_BASE)
+
+// Peripheral Clock Enable / Disable Macros
+
+#define GPIOA_CLK_EN()	(RCC->AHB1ENR |= (1 << 0))
+#define GPIOB_CLK_EN()	(RCC->AHB1ENR |= (1 << 1))
+#define GPIOC_CLK_EN()	(RCC->AHB1ENR |= (1 << 2))
+#define GPIOD_CLK_EN()	(RCC->AHB1ENR |= (1 << 3))
+#define GPIOE_CLK_EN()	(RCC->AHB1ENR |= (1 << 4))
+#define GPIOF_CLK_EN()	(RCC->AHB1ENR |= (1 << 5))
+#define GPIOG_CLK_EN()	(RCC->AHB1ENR |= (1 << 6))
+#define GPIOH_CLK_EN()	(RCC->AHB1ENR |= (1 << 7))
+#define GPIOI_CLK_EN()	(RCC->AHB1ENR |= (1 << 8))
+
+#define SPI2_CLK_EN()	(RCC->APB1ENR |= (1 << 14))
+#define SPI3_CLK_EN()	(RCC->APB1ENR |= (1 << 15))
+#define USART2_CLK_EN()	(RCC->APB1ENR |= (1 << 17))
+#define USART3_CLK_EN()	(RCC->APB1ENR |= (1 << 18))
+#define UART4_CLK_EN()	(RCC->APB1ENR |= (1 << 19))
+#define UART5_CLK_EN()	(RCC->APB1ENR |= (1 << 20))
+#define I2C1_CLK_EN()	(RCC->APB1ENR |= (1 << 21))
+#define I2C2_CLK_EN()	(RCC->APB1ENR |= (1 << 22))
+#define I2C3_CLK_EN()	(RCC->APB1ENR |= (1 << 23))
+
+#define USART1_CLK_EN()	(RCC->APB2ENR |= (1 << 4))
+#define USART6_CLK_EN()	(RCC->APB2ENR |= (1 << 5))
+#define SPI1_CLK_EN()	(RCC->APB2ENR |= (1 << 12))
+#define SYSCFG_CLK_EN()	(RCC->APB2ENR |= (1 << 14))
+
+#define GPIOA_CLK_DI()	(RCC->AHB1ENR &= ~(1 << 0))
+#define GPIOB_CLK_DI()	(RCC->AHB1ENR &= ~(1 << 1))
+#define GPIOC_CLK_DI()	(RCC->AHB1ENR &= ~(1 << 2))
+#define GPIOD_CLK_DI()	(RCC->AHB1ENR &= ~(1 << 3))
+#define GPIOE_CLK_DI()	(RCC->AHB1ENR &= ~(1 << 4))
+#define GPIOF_CLK_DI()	(RCC->AHB1ENR &= ~(1 << 5))
+#define GPIOG_CLK_DI()	(RCC->AHB1ENR &= ~(1 << 6))
+#define GPIOH_CLK_DI()	(RCC->AHB1ENR &= ~(1 << 7))
+#define GPIOI_CLK_DI()	(RCC->AHB1ENR &= ~(1 << 8))
+
+#define SPI2_CLK_DI()	(RCC->APB1ENR &= ~(1 << 14))
+#define SPI3_CLK_DI()	(RCC->APB1ENR &= ~(1 << 15))
+#define USART2_CLK_DI()	(RCC->APB1ENR &= ~(1 << 17))
+#define USART3_CLK_DI()	(RCC->APB1ENR &= ~(1 << 18))
+#define UART4_CLK_DI()	(RCC->APB1ENR &= ~(1 << 19))
+#define UART5_CLK_DI()	(RCC->APB1ENR &= ~(1 << 20))
+#define I2C1_CLK_DI()	(RCC->APB1ENR &= ~(1 << 21))
+#define I2C2_CLK_DI()	(RCC->APB1ENR &= ~(1 << 22))
+#define I2C3_CLK_DI()	(RCC->APB1ENR &= ~(1 << 23))
+
+#define USART1_CLK_DI()	(RCC->APB2ENR &= ~(1 << 4))
+#define USART6_CLK_DI()	(RCC->APB2ENR &= ~(1 << 5))
+#define SPI1_CLK_DI()	(RCC->APB2ENR &= ~(1 << 12))
+#define SYSCFG_CLK_DI()	(RCC->APB2ENR &= ~(1 << 14))
 
 #endif /* INC_STM32F407XX_H_ */
