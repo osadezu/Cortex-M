@@ -1,5 +1,6 @@
-This repository contains program examples and experiments for Cortex-M processors.
+# This repository contains program examples and experiments for ARM Cortex-Mx processors.
 
-Currently only M4 (written for STM32F407G)
-Using Eclipse-based STM32CubeIDE
-Dev Board: STM32F407G-DISC1
+_Currently only Cortex-M4 (written for STM32F407xx)_
+
+* Using Eclipse-based STM32CubeIDE
+* Dev Board: [STM32F407G-DISC1](https://www.st.com/en/evaluation-tools/stm32f4discovery.html)

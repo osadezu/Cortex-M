@@ -11,6 +11,16 @@
 #include <stdint.h>
 
 
+// Miscellaneous
+
+#define ENABLE			1
+#define DISABLE			2
+#define SET				ENABLE
+#define RESET			DISABLE
+#define GPIO_PIN_SET	SET
+#define GPIO_PIN_RESET	RESET
+
+
 // Flash and SRAM Base Addresses
 
 #define FLASH_BASE		0x08000000U		// Main Memory
@@ -180,5 +190,6 @@ typedef struct {
 #define USART6_CLK_DI()	(RCC->APB2ENR &= ~(1 << 5))
 #define SPI1_CLK_DI()	(RCC->APB2ENR &= ~(1 << 12))
 #define SYSCFG_CLK_DI()	(RCC->APB2ENR &= ~(1 << 14))
+
 
 #endif /* INC_STM32F407XX_H_ */
