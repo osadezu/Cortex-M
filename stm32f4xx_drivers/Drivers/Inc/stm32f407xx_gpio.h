@@ -70,7 +70,7 @@ typedef struct {
 	uint8_t GPIO_PinNumber;			//> Value from @GPIO_PINS
 	uint8_t GPIO_PinMode;			//> Value from @GPIO_PIN_MODE
 	uint8_t GPIO_PinOSpeed;			//> Value from @GPIO_PIN_OSPEED
-	uint8_t GPIO_PinPuPd;	//> Value from @GPIO_PIN_PUPD
+	uint8_t GPIO_PinPuPd;			//> Value from @GPIO_PIN_PUPD
 	uint8_t GPIO_PinOType;			//> Value from @GPIO_PIN_OTYPE
 	uint8_t GPIO_PinAltFunMode;
 } GPIO_PinConfig_t;
@@ -90,7 +90,7 @@ typedef struct {
 
 // Peripheral Clock Control
 
-void GPIO_ClkCtrl(GPIO_RegDef_t *pGPIOx, uint8_t EnDi);						// GPIO Clock Enable / Disable
+void GPIO_ClkCtrl(GPIO_RegDef_t *pGPIOx, uint8_t state);					// GPIO Clock Enable / Disable
 
 
 // Peripheral Initialize / De-initialize
@@ -101,17 +101,17 @@ void GPIO_Deinit(GPIO_RegDef_t *pGPIOx);									// Return port configuration to
 
 // Data Read / Write
 
-uint8_t GPIO_ReadPin(GPIO_RegDef_t *pGPIOx, uint8_t Pin);					// Read from input pin
+uint8_t GPIO_ReadPin(GPIO_RegDef_t *pGPIOx, uint8_t pin);					// Read from input pin
 uint16_t GPIO_ReadPort(GPIO_RegDef_t *pGPIOx);								// Read from input port
-void GPIO_WriteToPin(GPIO_RegDef_t *pGPIOx, uint8_t Pin, uint8_t Value);	// Write to output pin
-void GPIO_WriteToPort(GPIO_RegDef_t *pGPIOx, uint16_t Value);				// Write to output port
-void GPIO_TogglePin(GPIO_RegDef_t *pGPIOx, uint8_t Pin);					// Toggle Output pin
+void GPIO_WriteToPin(GPIO_RegDef_t *pGPIOx, uint8_t pin, uint8_t value);	// Write to output pin
+void GPIO_WriteToPort(GPIO_RegDef_t *pGPIOx, uint16_t value);				// Write to output port
+void GPIO_TogglePin(GPIO_RegDef_t *pGPIOx, uint8_t pin);					// Toggle Output pin
 
 
 // IRQ Configuration and ISR Handling
 
-void GPIO_IRQConfig(uint8_t IRQNumber, uint8_t IRQPriority, uint8_t EnDi);	// Configure port IRQ
-void GPIO_IRQHandle(uint8_t Pin);											// Handle port IRQ
+void GPIO_IRQConfig(uint8_t irqNumber, uint8_t irqPriority, uint8_t state);	// Configure port IRQ
+void GPIO_IRQHandle(uint8_t pin);											// Handle port IRQ
 
 
 #endif /* INC_STM32F407XX_GPIO_H_ */

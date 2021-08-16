@@ -1,4 +1,4 @@
-# This repository contains program examples and experiments for ARM Cortex-Mx processors.
+# ARM Cortex-Mx MCUs Examples and Experiments
 
 _Currently only Cortex-M4 (written for STM32F407xx)_
 

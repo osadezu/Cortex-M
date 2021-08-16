@@ -74,6 +74,7 @@
 #define GPIOI_BASE		((AHB1PERIPH_BASE) + 0x2000U)
 #define RCC_BASE		((AHB1PERIPH_BASE) + 0x3800U)
 
+
 // Peripheral Register Definition Structures
 
 typedef struct {
@@ -125,6 +126,7 @@ typedef struct {
 	volatile uint32_t PLLI2SCFGR;	// RCC PLLI2S configuration register
 } RCC_RegDef_t;
 
+
 // Peripheral Definitions
 
 #define GPIOA			((GPIO_RegDef_t*)GPIOA_BASE)
@@ -138,6 +140,7 @@ typedef struct {
 #define GPIOI 			((GPIO_RegDef_t*)GPIOI_BASE)
 
 #define RCC 			((RCC_RegDef_t*)RCC_BASE)
+
 
 // Peripheral Clock Enable / Disable Macros
 
@@ -191,5 +194,17 @@ typedef struct {
 #define SPI1_CLK_DI()	(RCC->APB2ENR &= ~(1 << 12))
 #define SYSCFG_CLK_DI()	(RCC->APB2ENR &= ~(1 << 14))
 
+
+// Peripheral Reset Macros
+
+#define GPIOA_RST()		do{(RCC->AHB1RSTR |= (1 << 0)); (RCC->AHB1RSTR &= ~(1 << 0));} while(0)
+#define GPIOB_RST()		do{(RCC->AHB1RSTR |= (1 << 1)); (RCC->AHB1RSTR &= ~(1 << 1));} while(0)
+#define GPIOC_RST()		do{(RCC->AHB1RSTR |= (1 << 2)); (RCC->AHB1RSTR &= ~(1 << 2));} while(0)
+#define GPIOD_RST()		do{(RCC->AHB1RSTR |= (1 << 3)); (RCC->AHB1RSTR &= ~(1 << 3));} while(0)
+#define GPIOE_RST()		do{(RCC->AHB1RSTR |= (1 << 4)); (RCC->AHB1RSTR &= ~(1 << 4));} while(0)
+#define GPIOF_RST()		do{(RCC->AHB1RSTR |= (1 << 5)); (RCC->AHB1RSTR &= ~(1 << 5));} while(0)
+#define GPIOG_RST()		do{(RCC->AHB1RSTR |= (1 << 6)); (RCC->AHB1RSTR &= ~(1 << 6));} while(0)
+#define GPIOH_RST()		do{(RCC->AHB1RSTR |= (1 << 7)); (RCC->AHB1RSTR &= ~(1 << 7));} while(0)
+#define GPIOI_RST()		do{(RCC->AHB1RSTR |= (1 << 8)); (RCC->AHB1RSTR &= ~(1 << 8));} while(0)
 
 #endif /* INC_STM32F407XX_H_ */
