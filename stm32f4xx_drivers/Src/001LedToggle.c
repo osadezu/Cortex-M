@@ -22,6 +22,7 @@ int main(void)
 	gpioLED.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	gpioLED.GPIO_PinConfig.GPIO_PinOSpeed = GPIO_OSPEED_HI; // Doesn't matter, just a test
 	gpioLED.GPIO_PinConfig.GPIO_PinOType = GPIO_OTYPE_PP;
+	// gpioLED.GPIO_PinConfig.GPIO_PinOType = GPIO_OTYPE_OD; // Open drain, require external pull-up.
 
 	GPIO_ClkCtrl(GPIOD, ENABLE);
 	GPIO_Init(&gpioLED);

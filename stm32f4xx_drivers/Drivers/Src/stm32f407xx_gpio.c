@@ -7,9 +7,10 @@
 
 #include "stm32f407xx_gpio.h"
 
-/*****************************
- *  API Function Definitions *
- *****************************/
+
+/*******************************
+ *  GPIO Function Definitions  *
+ *******************************/
 
 /** @brief 		Enable or disable clock for GPIO port
  *
@@ -83,9 +84,42 @@ void GPIO_Init(GPIO_Handle_t *pGPIOHandle)
 		pGPIOHandle->pGPIOx->MODER &= ~(0x3 << (2 * (pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber))); // Clear
 		pGPIOHandle->pGPIOx->MODER |= (bits << (2 * (pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber))); // Set
 	}
-	else if (pGPIOHandle->GPIO_PinConfig.GPIO_PinMode > GPIO_MODE_ANALOG)
+	else // External Interrupt Modes (GPIO_PinMode >= GPIO_MODE_EX_RT)
 	{
-		// TODO: Configure interrupt modes
+		if (pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_EX_RT)
+		{
+			// Set RTSR
+			EXTI->RTSR |= (0x1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
+			// Reset FTSR
+			EXTI->FTSR &= ~(0x1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
+		}
+		else if (pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_EX_FT)
+		{
+			// Set FTSR
+			EXTI->FTSR |= (0x1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
+			// Reset RTSR
+			EXTI->RTSR &= ~(0x1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
+		}
+		else if (pGPIOHandle->GPIO_PinConfig.GPIO_PinMode == GPIO_MODE_EX_RT)
+		{
+			// Set RTSR
+			EXTI->RTSR |= (0x1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
+			// Set FTSR
+			EXTI->FTSR |= (0x1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
+		}
+
+		// Configure port selection in SYSCFG_EXTICR
+
+		SYSCFG_CLK_EN();
+
+		uint8_t extiCRx = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber / 4; // Which EXTICRx
+		uint8_t extix = 4 * (pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber % 4); // Which nibble
+		bits = 0xF & GPIO_PORT_NUMBER(pGPIOHandle->pGPIOx); // Macro resolves to 0:8 value for PA:PI selection
+		SYSCFG->EXTICR[extiCRx] &= ~(0xF << extix); // Clear
+		SYSCFG->EXTICR[extiCRx] |= (bits << extix); // Clear
+
+		// Enable interrupt delivery with EXTI_IMR
+		EXTI->IMR |= (0x1 << pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber);
 	}
 
 	// Configure output type: GPIOx_OTYPER
@@ -107,7 +141,7 @@ void GPIO_Init(GPIO_Handle_t *pGPIOHandle)
 	{
 		// Configure alternate function: GPIOx_AFRx
 		bits = 0xF & pGPIOHandle->GPIO_PinConfig.GPIO_PinAltFunMode;
-		uint8_t afrx = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber/8; // Which AFRx
+		uint8_t afrx = pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber / 8; // Which AFRx
 		uint8_t afrxY = 4 * (pGPIOHandle->GPIO_PinConfig.GPIO_PinNumber % 8); // Which position
 		pGPIOHandle->pGPIOx->AFR[afrx] &= ~(0xF << afrxY); // Clear
 		pGPIOHandle->pGPIOx->AFR[afrx] |= (bits << afrxY); // Set
@@ -205,14 +239,76 @@ void GPIO_TogglePin(GPIO_RegDef_t *pGPIOx, uint8_t pin)
 }
 
 
-// IRQ Configuration and ISR Handling
+/****************************
+ *  GPIO IRQ Configuration  *
+ ****************************/
 
-void GPIO_IRQConfig(uint8_t irqNumber, uint8_t irqPriority, uint8_t state) // Configure port IRQ
+/** @brief 		Configure GPIO port IRQ
+ *
+ * @param[in] 	irqNumber	MCU Specific IRQ position to configure
+ * @param[in] 	state		ENABLE or DISABLE
+ *
+ * @return		none
+ */
+void GPIO_IRQConfig(uint8_t irqNumber, uint8_t state)
 {
-
+	if (state == ENABLE)
+	{
+		if (irqNumber <= 31)		// NVIC ISER0
+		{
+			*NVIC_ISER0 |= (0x1 << irqNumber);
+		}
+		else if (irqNumber <= 63)	// NVIC ISER1
+		{
+			*NVIC_ISER1 |= (0x1 << (irqNumber % 32));
+		}
+		else if (irqNumber <= 95) 	// NVIC ISER2
+		{
+			*NVIC_ISER2 |= (0x1 << (irqNumber % 32));
+		}
+	}
+	else if (state == DISABLE)
+	{
+		if (irqNumber <= 31)		// NVIC ISER0
+		{
+			*NVIC_ICER0 |= (0x1 << irqNumber);
+		}
+		else if (irqNumber <= 63)	// NVIC ISER1
+		{
+			*NVIC_ICER1 |= (0x1 << (irqNumber % 32));
+		}
+		else if (irqNumber <= 95) 	// NVIC ISER2
+		{
+			*NVIC_ICER2 |= (0x1 << (irqNumber % 32));
+		}
+	}
 }
 
-void GPIO_IRQHandle(uint8_t pin) // Handle port IRQ
+/** @brief 		Configure GPIO port IRQ PRiority
+ *
+ * @param[in] 	irqNumber		MCU Specific IRQ position to configure
+ * @param[in] 	irqPriority		Priority to assign
+ *
+ * @return		none
+ */
+void GPIO_IRQPriorityConfig(uint8_t irqNumber, uint8_t irqPriority)
 {
+	uint8_t bits = (PRI_LEVELS - 1) & irqPriority; // Mask bits up to implemented priority levels
 
+	NVIC_IPR->PRI[irqNumber] &= ~ (0xF << (8 - PRI_BITS)); // Clear
+	NVIC_IPR->PRI[irqNumber] |= (bits << (8 - PRI_BITS)); // Set
+}
+
+/** @brief 		Reset GPIO port IRQ
+ *
+ * @param[in] 	pin		Pin for which request is reset
+ *
+ * @return		none
+ */
+void GPIO_IRQReset(uint8_t pin)
+{
+	if (EXTI->PR & (0x1 << pin))
+	{
+		EXTI->PR |= (0x1 << pin);
+	}
 }

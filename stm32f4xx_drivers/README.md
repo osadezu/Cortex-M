@@ -5,7 +5,9 @@
 
 ## Currently implemented / WIP peripherals
 - [x] GPIO
-- [ ] RCC _(Partially, for implemented peripherals)_
+- [x] SYSCFG _(Partially, for EXTI configuration registers)_
+- [x] EXTI _(Partially, for GPIO external interrupts)_
+- [x] RCC _(Partially, for implemented peripherals)_
 - [ ] SPI2
 - [ ] SPI3
 - [ ] USART2
@@ -18,5 +20,3 @@
 - [ ] USART1
 - [ ] USART6
 - [ ] SPI1
-- [ ] EXTI
-- [ ] SYSCFG

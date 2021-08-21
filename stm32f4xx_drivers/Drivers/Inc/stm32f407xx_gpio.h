@@ -75,7 +75,6 @@ typedef struct {
 	uint8_t GPIO_PinAltFunMode;
 } GPIO_PinConfig_t;
 
-
 // Handle Structure for GPIO pins
 
 typedef struct {
@@ -96,6 +95,7 @@ void GPIO_ClkCtrl(GPIO_RegDef_t *pGPIOx, uint8_t state);					// GPIO Clock Enabl
 // Peripheral Initialize / De-initialize
 
 void GPIO_Init(GPIO_Handle_t *pGPIOHandle);									// Initialize port
+// TODO: Method to initialize unused GPIO_PinConfig_t members to avoid setting registers with garbage values.
 void GPIO_Deinit(GPIO_RegDef_t *pGPIOx);									// Return port configuration to reset state
 
 
@@ -110,8 +110,9 @@ void GPIO_TogglePin(GPIO_RegDef_t *pGPIOx, uint8_t pin);					// Toggle Output pi
 
 // IRQ Configuration and ISR Handling
 
-void GPIO_IRQConfig(uint8_t irqNumber, uint8_t irqPriority, uint8_t state);	// Configure port IRQ
-void GPIO_IRQHandle(uint8_t pin);											// Handle port IRQ
+void GPIO_IRQConfig(uint8_t irqNumber, uint8_t state);					// Configure port IRQ
+void GPIO_IRQPriorityConfig(uint8_t irqNumber, uint8_t irqPriority);	// Configure port IRQ Priority
+void GPIO_IRQReset(uint8_t pin);										// Reset GPIO port IRQ
 
 
 #endif /* INC_STM32F407XX_GPIO_H_ */

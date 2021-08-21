@@ -11,6 +11,46 @@
 #include <stdint.h>
 
 
+/*****************************************
+ *  ARM Cortex-Mx Processor Core Macros  *
+ *****************************************/
+
+// NVIC Base Address
+
+#define NVIC_BASE		0xE000E100U
+
+
+// NVIC Interrupt Set-enable Registers
+
+#define NVIC_ISER0		((volatile uint32_t*) 0xE000E100U)
+#define NVIC_ISER1		((volatile uint32_t*) 0xE000E104U)
+#define NVIC_ISER2		((volatile uint32_t*) 0xE000E108U)
+
+
+// NVIC Interrupt Clear-enable Registers
+
+#define NVIC_ICER0		((volatile uint32_t*) 0XE000E180U)
+#define NVIC_ICER1		((volatile uint32_t*) 0xE000E184U)
+#define NVIC_ICER2		((volatile uint32_t*) 0xE000E188U)
+// TODO: Consolidate ISER, ICER, etc in an NVIC_RegDef_t for consistency.
+
+
+// Private Peripheral Register Definition Structures
+
+typedef struct {
+	volatile uint8_t PRI[240];	// Byte offset, STM32F407x uses only 82
+} NVIC_IPR_RegDef_t;
+
+// NVIC Interrupt Priority Registers
+
+#define NVIC_IPR_BASE	0xE000E400U
+#define NVIC_IPR		((NVIC_IPR_RegDef_t*)NVIC_IPR_BASE)
+
+
+/***************************
+ *  STM32F407x MCU Macros  *
+ ***************************/
+
 // Miscellaneous
 
 #define ENABLE			1
@@ -19,6 +59,9 @@
 #define RESET			DISABLE
 #define GPIO_PIN_SET	SET
 #define GPIO_PIN_RESET	RESET
+
+#define PRI_BITS		4				// Priority bits implemented by the MCU
+#define PRI_LEVELS		16				// Priority levels implemented by the MCU
 
 
 // Flash and SRAM Base Addresses
@@ -78,54 +121,71 @@
 // Peripheral Register Definition Structures
 
 typedef struct {
-	volatile uint32_t MODER;		// GPIO port mode register
-	volatile uint32_t OTYPER;		// GPIO port output type register
-	volatile uint32_t OSPEEDR;		// GPIO port output speed register
-	volatile uint32_t PUPDR;		// GPIO port pull-up/pull-down register
-	volatile uint32_t IDR;			// GPIO port input data register
-	volatile uint32_t ODR;			// GPIO port output data register
-	volatile uint32_t BSRR;			// GPIO port bit set/reset register
-	volatile uint32_t LCKR;			// GPIO port configuration lock register
-	volatile uint32_t AFR[2];		// GPIO alternate function register (AFRL: AFR[0] + AFRH: AFR[1])
+	volatile uint32_t MODER;		// +0x00 GPIO port mode register
+	volatile uint32_t OTYPER;		// +0x04 GPIO port output type register
+	volatile uint32_t OSPEEDR;		// +0x08 GPIO port output speed register
+	volatile uint32_t PUPDR;		// +0x0C GPIO port pull-up/pull-down register
+	volatile uint32_t IDR;			// +0x10 GPIO port input data register
+	volatile uint32_t ODR;			// +0x14 GPIO port output data register
+	volatile uint32_t BSRR;			// +0x18 GPIO port bit set/reset register
+	volatile uint32_t LCKR;			// +0x1C GPIO port configuration lock register
+	volatile uint32_t AFR[2];		// +0x20 : +0x24 GPIO alternate function registers (AFRL: AFR[0] + AFRH: AFR[1])
 } GPIO_RegDef_t;
 
 typedef struct {
-	volatile uint32_t CR;			// RCC clock control register
-	volatile uint32_t PLLCFGR;  	// RCC PLL configuration register
-	volatile uint32_t CFGR;			// RCC clock configuration register
-	volatile uint32_t CIR;			// RCC clock interrupt register
-	volatile uint32_t AHB1RSTR;		// RCC AHB1 peripheral reset register
-	volatile uint32_t AHB2RSTR;		// RCC AHB2 peripheral reset register
-	volatile uint32_t AHB3RSTR;		// RCC AHB3 peripheral reset register
-	uint32_t reserved0;
-	volatile uint32_t APB1RSTR;		// RCC APB1 peripheral reset register
-	volatile uint32_t APB2RSTR;		// RCC APB2 peripheral reset register
-	uint32_t reserved1;
-	uint32_t reserved2;
-	volatile uint32_t AHB1ENR;		// RCC AHB1 peripheral clock enable register
-	volatile uint32_t AHB2ENR;		// RCC AHB2 peripheral clock enable register
-	volatile uint32_t AHB3ENR;		// RCC AHB3 peripheral clock enable register
-	uint32_t reserved3;
-	volatile uint32_t APB1ENR;		// RCC APB1 peripheral clock enable register
-	volatile uint32_t APB2ENR;		// RCC APB2 peripheral clock enable register
-	uint32_t reserved4;
-	uint32_t reserved5;
-	volatile uint32_t AHB1LPENR;	// RCC AHB1 peripheral clock enable in low power mode register
-	volatile uint32_t AHB2LPENR;	// RCC AHB2 peripheral clock enable in low power mode register
-	volatile uint32_t AHB3LPENR;	// RCC AHB3 peripheral clock enable in low power mode register
-	uint32_t reserved6;
-	volatile uint32_t APB1LPENR;	// RCC APB1 peripheral clock enable in low power mode register
-	volatile uint32_t APB2LPENR;	// RCC APB2 peripheral clock enable in low power mode register
-	uint32_t reserved7;
-	uint32_t reserved8;
-	volatile uint32_t BDCR;			// RCC Backup domain control register
-	volatile uint32_t CSR;			// RCC clock control & status register
-	uint32_t reserved9;
-	uint32_t reserved10;
-	volatile uint32_t SSCGR;		// RCC spread spectrum clock generation register
-	volatile uint32_t PLLI2SCFGR;	// RCC PLLI2S configuration register
+	volatile uint32_t CR;			// +0x00 RCC clock control register
+	volatile uint32_t PLLCFGR;  	// +0x04 RCC PLL configuration register
+	volatile uint32_t CFGR;			// +0x08 RCC clock configuration register
+	volatile uint32_t CIR;			// +0x0C RCC clock interrupt register
+	volatile uint32_t AHB1RSTR;		// +0x10 RCC AHB1 peripheral reset register
+	volatile uint32_t AHB2RSTR;		// +0x14 RCC AHB2 peripheral reset register
+	volatile uint32_t AHB3RSTR;		// +0x18 RCC AHB3 peripheral reset register
+	uint32_t reserved0;				// +0x1C
+	volatile uint32_t APB1RSTR;		// +0x20 RCC APB1 peripheral reset register
+	volatile uint32_t APB2RSTR;		// +0x24 RCC APB2 peripheral reset register
+	uint32_t reserved1;				// +0x28
+	uint32_t reserved2;				// +0x2C
+	volatile uint32_t AHB1ENR;		// +0x30 RCC AHB1 peripheral clock enable register
+	volatile uint32_t AHB2ENR;		// +0x34 RCC AHB2 peripheral clock enable register
+	volatile uint32_t AHB3ENR;		// +0x38 RCC AHB3 peripheral clock enable register
+	uint32_t reserved3;				// +0x3C
+	volatile uint32_t APB1ENR;		// +0x40 RCC APB1 peripheral clock enable register
+	volatile uint32_t APB2ENR;		// +0x44 RCC APB2 peripheral clock enable register
+	uint32_t reserved4;				// +0x48
+	uint32_t reserved5;				// +0x4C
+	volatile uint32_t AHB1LPENR;	// +0x50 RCC AHB1 peripheral clock enable in low power mode register
+	volatile uint32_t AHB2LPENR;	// +0x54 RCC AHB2 peripheral clock enable in low power mode register
+	volatile uint32_t AHB3LPENR;	// +0x58 RCC AHB3 peripheral clock enable in low power mode register
+	uint32_t reserved6;				// +0x5C
+	volatile uint32_t APB1LPENR;	// +0x60 RCC APB1 peripheral clock enable in low power mode register
+	volatile uint32_t APB2LPENR;	// +0x64 RCC APB2 peripheral clock enable in low power mode register
+	uint32_t reserved7;				// +0x68
+	uint32_t reserved8;				// +0x6C
+	volatile uint32_t BDCR;			// +0x70 RCC Backup domain control register
+	volatile uint32_t CSR;			// +0x74 RCC clock control & status register
+	uint32_t reserved9;				// +0x78
+	uint32_t reserved10;			// +0x7C
+	volatile uint32_t SSCGR;		// +0x80 RCC spread spectrum clock generation register
+	volatile uint32_t PLLI2SCFGR;	// +0x84 RCC PLLI2S configuration register
 } RCC_RegDef_t;
 
+typedef struct {
+	volatile uint32_t IMR;			// +0x00 Interrupt mask register
+	volatile uint32_t EMR;			// +0x04 Event mask register
+	volatile uint32_t RTSR;			// +0x08 Rising trigger selection register
+	volatile uint32_t FTSR;			// +0x0C Falling trigger selection register
+	volatile uint32_t SWIER;		// +0x10 Software interrupt event register
+	volatile uint32_t PR;			// +0x14 Pending register
+} EXTI_RegDef_t;
+
+typedef struct {
+	volatile uint32_t MEMRMP;		// +0x00 SYSCFG memory remap register
+	volatile uint32_t PMC;			// +0x04 SYSCFG peripheral mode configuration register
+	volatile uint32_t EXTICR[4];	// +0x08 : +0x14 SYSCFG external interrupt configuration registers (EXTICR1 : EXTICR4)
+	uint32_t reserved0;				// +0x18
+	uint32_t reserved1;				// +0x1C
+	volatile uint32_t CMPCR;		// +0x20 Compensation cell control register
+} SYSCFG_RegDef_t;
 
 // Peripheral Definitions
 
@@ -140,6 +200,10 @@ typedef struct {
 #define GPIOI 			((GPIO_RegDef_t*)GPIOI_BASE)
 
 #define RCC 			((RCC_RegDef_t*)RCC_BASE)
+
+#define EXTI			((EXTI_RegDef_t*)EXTI_BASE)
+
+#define SYSCFG			((SYSCFG_RegDef_t*)SYSCFG_BASE)
 
 
 // Peripheral Clock Enable / Disable Macros
@@ -206,5 +270,43 @@ typedef struct {
 #define GPIOG_RST()		do{(RCC->AHB1RSTR |= (1 << 6)); (RCC->AHB1RSTR &= ~(1 << 6));} while(0)
 #define GPIOH_RST()		do{(RCC->AHB1RSTR |= (1 << 7)); (RCC->AHB1RSTR &= ~(1 << 7));} while(0)
 #define GPIOI_RST()		do{(RCC->AHB1RSTR |= (1 << 8)); (RCC->AHB1RSTR &= ~(1 << 8));} while(0)
+
+
+// IRQ Numbers
+
+#define IRQ_NO_EXTI0		6
+#define IRQ_NO_EXTI1		7
+#define IRQ_NO_EXTI2		8
+#define IRQ_NO_EXTI3		9
+#define IRQ_NO_EXTI4		10
+#define IRQ_NO_EXTI9_5		23
+#define IRQ_NO_EXTI15_10	40
+
+
+// IRQ Priority Levels
+
+#define IRQ_PRI_0			0	// Highest Priority
+#define IRQ_PRI_1			1
+#define IRQ_PRI_2			2
+#define IRQ_PRI_3			3
+#define IRQ_PRI_4			4
+#define IRQ_PRI_5			5
+#define IRQ_PRI_6			6
+#define IRQ_PRI_7			7
+#define IRQ_PRI_8			8
+#define IRQ_PRI_9			9
+#define IRQ_PRI_10			10
+#define IRQ_PRI_11			11
+#define IRQ_PRI_12			12
+#define IRQ_PRI_13			13
+#define IRQ_PRI_14			14
+#define IRQ_PRI_15			15	// Lowest Priority
+
+
+// Return number code for GPIO port
+// Macro resolves to 0:8 value for PA:PI selection
+
+#define GPIO_PORT_NUMBER(x)		(((uint32_t*)(x) - (uint32_t*)(GPIOA)) >> 8)
+
 
 #endif /* INC_STM32F407XX_H_ */
