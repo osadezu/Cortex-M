@@ -53,12 +53,13 @@ typedef struct {
 
 // Miscellaneous
 
-#define ENABLE			1
-#define DISABLE			2
-#define SET				ENABLE
-#define RESET			DISABLE
-#define GPIO_PIN_SET	SET
-#define GPIO_PIN_RESET	RESET
+#define CLEAR			0
+#define SET				1
+#define RESET			CLEAR
+#define DISABLE			CLEAR
+#define ENABLE			SET
+#define FLAG_CLEAR		CLEAR
+#define FLAG_SET		SET
 
 #define PRI_BITS		4				// Priority bits implemented by the MCU
 #define PRI_LEVELS		16				// Priority levels implemented by the MCU
@@ -100,8 +101,8 @@ typedef struct {
 #define USART1_BASE		((APB2PERIPH_BASE) + 0x1000U)
 #define USART6_BASE		((APB2PERIPH_BASE) + 0x1400U)
 #define SPI1_BASE		((APB2PERIPH_BASE) + 0x3000U)
-#define EXTI_BASE		((APB2PERIPH_BASE) + 0x3C00U)
 #define SYSCFG_BASE		((APB2PERIPH_BASE) + 0x3800U)
+#define EXTI_BASE		((APB2PERIPH_BASE) + 0x3C00U)
 
 
 // AHB1 Bus Peripheral Base Addresses
@@ -119,18 +120,6 @@ typedef struct {
 
 
 // Peripheral Register Definition Structures
-
-typedef struct {
-	volatile uint32_t MODER;		// +0x00 GPIO port mode register
-	volatile uint32_t OTYPER;		// +0x04 GPIO port output type register
-	volatile uint32_t OSPEEDR;		// +0x08 GPIO port output speed register
-	volatile uint32_t PUPDR;		// +0x0C GPIO port pull-up/pull-down register
-	volatile uint32_t IDR;			// +0x10 GPIO port input data register
-	volatile uint32_t ODR;			// +0x14 GPIO port output data register
-	volatile uint32_t BSRR;			// +0x18 GPIO port bit set/reset register
-	volatile uint32_t LCKR;			// +0x1C GPIO port configuration lock register
-	volatile uint32_t AFR[2];		// +0x20 : +0x24 GPIO alternate function registers (AFRL: AFR[0] + AFRH: AFR[1])
-} GPIO_RegDef_t;
 
 typedef struct {
 	volatile uint32_t CR;			// +0x00 RCC clock control register
@@ -170,15 +159,6 @@ typedef struct {
 } RCC_RegDef_t;
 
 typedef struct {
-	volatile uint32_t IMR;			// +0x00 Interrupt mask register
-	volatile uint32_t EMR;			// +0x04 Event mask register
-	volatile uint32_t RTSR;			// +0x08 Rising trigger selection register
-	volatile uint32_t FTSR;			// +0x0C Falling trigger selection register
-	volatile uint32_t SWIER;		// +0x10 Software interrupt event register
-	volatile uint32_t PR;			// +0x14 Pending register
-} EXTI_RegDef_t;
-
-typedef struct {
 	volatile uint32_t MEMRMP;		// +0x00 SYSCFG memory remap register
 	volatile uint32_t PMC;			// +0x04 SYSCFG peripheral mode configuration register
 	volatile uint32_t EXTICR[4];	// +0x08 : +0x14 SYSCFG external interrupt configuration registers (EXTICR1 : EXTICR4)
@@ -187,7 +167,46 @@ typedef struct {
 	volatile uint32_t CMPCR;		// +0x20 Compensation cell control register
 } SYSCFG_RegDef_t;
 
+typedef struct {
+	volatile uint32_t MODER;		// +0x00 GPIO port mode register
+	volatile uint32_t OTYPER;		// +0x04 GPIO port output type register
+	volatile uint32_t OSPEEDR;		// +0x08 GPIO port output speed register
+	volatile uint32_t PUPDR;		// +0x0C GPIO port pull-up/pull-down register
+	volatile uint32_t IDR;			// +0x10 GPIO port input data register
+	volatile uint32_t ODR;			// +0x14 GPIO port output data register
+	volatile uint32_t BSRR;			// +0x18 GPIO port bit set/reset register
+	volatile uint32_t LCKR;			// +0x1C GPIO port configuration lock register
+	volatile uint32_t AFR[2];		// +0x20 : +0x24 GPIO alternate function registers (AFRL: AFR[0] + AFRH: AFR[1])
+} GPIO_RegDef_t;
+
+typedef struct {
+	volatile uint32_t IMR;			// +0x00 Interrupt mask register
+	volatile uint32_t EMR;			// +0x04 Event mask register
+	volatile uint32_t RTSR;			// +0x08 Rising trigger selection register
+	volatile uint32_t FTSR;			// +0x0C Falling trigger selection register
+	volatile uint32_t SWIER;		// +0x10 Software interrupt event register
+	volatile uint32_t PR;			// +0x14 Pending register
+} EXTI_RegDef_t;
+
+
+typedef struct {
+	volatile uint32_t CR1;			// +0x00 SPI control register 1
+	volatile uint32_t CR2;			// +0x04 SPI control register 2
+	volatile uint32_t SR;			// +0x08 SPI status register
+	volatile uint32_t DR;			// +0x0C SPI data register
+	volatile uint32_t CRCPR;		// +0x10 SPI CRC polynomial register
+	volatile uint32_t RXCRCR;		// +0x14 SPI RX CRC register
+	volatile uint32_t TXCRCR;		// +0x18 SPI TX CRC register
+	volatile uint32_t I2SCFGR;		// +0x1C SPI_I2S configuration register
+	volatile uint32_t I2SPR;		// +0x20 SPI_I2S prescaler register
+} SPI_RegDef_t;
+
+
 // Peripheral Definitions
+
+#define RCC 			((RCC_RegDef_t*)RCC_BASE)
+
+#define SYSCFG			((SYSCFG_RegDef_t*)SYSCFG_BASE)
 
 #define GPIOA			((GPIO_RegDef_t*)GPIOA_BASE)
 #define GPIOB			((GPIO_RegDef_t*)GPIOB_BASE)
@@ -199,11 +218,11 @@ typedef struct {
 #define GPIOH			((GPIO_RegDef_t*)GPIOH_BASE)
 #define GPIOI 			((GPIO_RegDef_t*)GPIOI_BASE)
 
-#define RCC 			((RCC_RegDef_t*)RCC_BASE)
-
 #define EXTI			((EXTI_RegDef_t*)EXTI_BASE)
 
-#define SYSCFG			((SYSCFG_RegDef_t*)SYSCFG_BASE)
+#define SPI1			((SPI_RegDef_t*)SPI1_BASE)
+#define SPI2			((SPI_RegDef_t*)SPI2_BASE)
+#define SPI3			((SPI_RegDef_t*)SPI3_BASE)
 
 
 // Peripheral Clock Enable / Disable Macros
@@ -271,6 +290,10 @@ typedef struct {
 #define GPIOH_RST()		do{(RCC->AHB1RSTR |= (1 << 7)); (RCC->AHB1RSTR &= ~(1 << 7));} while(0)
 #define GPIOI_RST()		do{(RCC->AHB1RSTR |= (1 << 8)); (RCC->AHB1RSTR &= ~(1 << 8));} while(0)
 
+#define SPI1_RST()		do{(RCC->APB2RSTR |= (1 << 12)); (RCC->APB2RSTR &= ~(1 << 12));} while(0)
+#define SPI2_RST()		do{(RCC->APB1RSTR |= (1 << 14)); (RCC->APB1RSTR &= ~(1 << 14));} while(0)
+#define SPI3_RST()		do{(RCC->APB2RSTR |= (1 << 15)); (RCC->APB2RSTR &= ~(1 << 15));} while(0)
+
 
 // IRQ Numbers
 
@@ -301,6 +324,48 @@ typedef struct {
 #define IRQ_PRI_13			13
 #define IRQ_PRI_14			14
 #define IRQ_PRI_15			15	// Lowest Priority
+
+
+// Peripheral Register Field Definitions
+
+// SPI control register 1
+
+#define SPI_CR1_CPHA		0		// 0: Clock Phase
+#define SPI_CR1_CPOL		1		// 1: Clock Polarity
+#define SPI_CR1_MSTR		2		// 2: Master Selection
+#define SPI_CR1_BR			3		// 5:3 Baud Rate Control
+#define SPI_CR1_SPE			6		// 6: SPI Enable
+#define SPI_CR1_LSBFIRST	7		// 7: Frame format
+#define SPI_CR1_SSI			8		// 8: Internal Slave Select
+#define SPI_CR1_SSM			9		// 9: Software Slave Management
+#define SPI_CR1_RXONLY		10		// 10: Receive Only
+#define SPI_CR1_DFF			11		// 11: Data Frame Format
+#define SPI_CR1_CRCNEXT		12		// 12: CRC transfer next
+#define SPI_CR1_CRCEN		13		// 13: Hardware CRC calculation enable
+#define SPI_CR1_BIDIOE		14		// 14: Output enable in bidirectional mode
+#define SPI_CR1_BIDIMODE	15		// 15: Bidirectional data mode enable
+
+// SPI control register 2
+
+#define SPI_CR2_RXDMAEN		0		// 0: Rx buffer DMA enable
+#define SPI_CR2_TXDMAEN		1		// 1: Tx buffer DMA enable
+#define SPI_CR2_SSOE		2		// 2: SS output enable
+#define SPI_CR2_FRF			4		// 4: Frame Format
+#define SPI_CR2_ERRIE		5		// 5: Error interrupt enable
+#define SPI_CR2_RXNEIE		6		// 6: RX buffer not empty interrupt enable
+#define SPI_CR2_TXEIE		7		// 7: Tx buffer empty interrupt enable
+
+// SPI status register
+
+#define SPI_SR_RXNE			0		// 0: Receive buffer not empty
+#define SPI_SR_TXE			1		// 1: Transmit buffer empty
+#define SPI_SR_CHSIDE		2		// 2: Channel side
+#define SPI_SR_UDR			3		// 3: Underrun flag
+#define SPI_SR_CRCERR		4		// 4: CRC error flag
+#define SPI_SR_MODF			5		// 5: Mode fault
+#define SPI_SR_OVR			6		// 6: Overrun flag
+#define SPI_SR_BSY			7		// 7: Busy flag
+#define SPI_SR_FRE			8		// 8: Frame format error
 
 
 // Return number code for GPIO port

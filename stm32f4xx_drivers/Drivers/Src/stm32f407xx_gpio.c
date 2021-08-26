@@ -2,7 +2,7 @@
  * stm32f407xx_gpio.c
  *
  *  Created on: Aug 12, 2021
- *      Author: oscar
+ *      Author: OSdZ
  */
 
 #include "stm32f407xx_gpio.h"
@@ -75,6 +75,9 @@ void GPIO_ClkCtrl(GPIO_RegDef_t *pGPIOx, uint8_t state)
  */
 void GPIO_Init(GPIO_Handle_t *pGPIOHandle)
 {
+	// Enable peripheral clock
+	GPIO_ClkCtrl(pGPIOHandle->pGPIOx, ENABLE);
+
 	uint8_t bits = 0;
 
 	if (pGPIOHandle->GPIO_PinConfig.GPIO_PinMode <= GPIO_MODE_ANALOG)
@@ -148,13 +151,13 @@ void GPIO_Init(GPIO_Handle_t *pGPIOHandle)
 	}
 }
 
-/** @brief 		De-initialize GPIO port
+/** @brief 		Return GPIO port configuration to reset state
  *
  * @param[in] 	*pGPIOx	GPIO base address
  *
  * @return		none
  */
-void GPIO_Deinit(GPIO_RegDef_t *pGPIOx) // Return port configuration to reset state
+void GPIO_Deinit(GPIO_RegDef_t *pGPIOx)
 {
 	if (pGPIOx == GPIOA) {
 		GPIOA_RST();

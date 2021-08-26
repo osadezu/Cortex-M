@@ -2,7 +2,7 @@
  * stm32f407xx_gpio.h
  *
  *  Created on: Aug 12, 2021
- *      Author: oscar
+ *      Author: OSdZ
  */
 
 #ifndef INC_STM32F407XX_GPIO_H_
@@ -41,6 +41,27 @@
 #define GPIO_PUPD_PU		1	// Pull-up
 #define GPIO_PUPD_PD		2	// Pull-down
 
+/// @GPIO_PIN_ALTFUN
+/// GPIO alternate function
+
+#define GPIO_PIN_AF0		0
+#define GPIO_PIN_AF1		1
+#define GPIO_PIN_AF2		2
+#define GPIO_PIN_AF3		3
+#define GPIO_PIN_AF4		4
+#define GPIO_PIN_AF5		5
+#define GPIO_PIN_AF6		6
+#define GPIO_PIN_AF7		7
+#define GPIO_PIN_AF8		8
+#define GPIO_PIN_AF9		9
+#define GPIO_PIN_AF10		10
+#define GPIO_PIN_AF11		11
+#define GPIO_PIN_AF12		12
+#define GPIO_PIN_AF13		13
+#define GPIO_PIN_AF14		14
+#define GPIO_PIN_AF15		15
+
+
 /// @GPIO_PINS
 /// GPIO port pins
 #define GPIO_PIN_0			0
@@ -72,7 +93,7 @@ typedef struct {
 	uint8_t GPIO_PinOSpeed;			//> Value from @GPIO_PIN_OSPEED
 	uint8_t GPIO_PinPuPd;			//> Value from @GPIO_PIN_PUPD
 	uint8_t GPIO_PinOType;			//> Value from @GPIO_PIN_OTYPE
-	uint8_t GPIO_PinAltFunMode;
+	uint8_t GPIO_PinAltFunMode;		//> Value from @GPIO_PIN_ALTFUN
 } GPIO_PinConfig_t;
 
 // Handle Structure for GPIO pins
