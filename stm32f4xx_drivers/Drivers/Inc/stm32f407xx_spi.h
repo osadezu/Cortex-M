@@ -65,6 +65,17 @@
 #define SPI_FRE_FLAG	(1 << SPI_SR_FRE)		// 8: Frame format error
 
 
+//SPI IRQ States
+#define SPI_READY		0
+#define SPI_BUSY_TX		1
+#define SPI_BUSY_RX		2
+
+// SPI IRQ Callback Events
+#define SPI_EVENT_TX_DONE 0
+#define SPI_EVENT_RX_DONE 1
+#define SPI_EVENT_OVR_ERR 2
+
+
 /*************************************
  *  Peripheral Structure Definitions *
  *************************************/
@@ -83,8 +94,14 @@ typedef struct {
 // Handle Structure for SPIx peripheral
 
 typedef struct {
-	SPI_RegDef_t *pSPIx;		// Pointer to base address of SPI peripheral
-	SPI_Config_t SPI_Config;	// SPI configuration settings
+	SPI_RegDef_t	*pSPIx;		// Pointer to base address of SPI peripheral
+	SPI_Config_t	SPI_Config;	// SPI configuration settings
+	uint8_t 		*pTxBuffer;	// Application Tx buffer address for IRQ transmit
+	uint8_t 		*pRxBuffer;	// Application Rx buffer address for IRQ transmit
+	uint32_t		TxLen;		// Tx data length for IRQ transmit
+	uint32_t		RxLen;		// Rx data length for IRQ receive
+	uint8_t			TxState;	// IRQ Tx state
+	uint8_t			RxState;	// IRQ Rx state
 } SPI_Handle_t;
 
 
@@ -104,22 +121,34 @@ void SPI_Init(SPI_Handle_t *pSPIHandle);										// Initialize peripheral
 void SPI_Deinit(SPI_RegDef_t *pSPIx);											// Return peripheral to reset state
 void SPI_Control(SPI_RegDef_t *pSPIx, uint8_t state);							// Peripheral Enable / Disable
 
-// Data Send and Receive
-
-void SPI_SendData(SPI_RegDef_t *pSPIx, uint8_t *pTXBuffer, uint32_t len);		// Send Data
-void SPI_ReceiveData(SPI_RegDef_t *pSPIx, uint8_t *pRXBuffer, uint32_t len);	// Receive Data
-
 // Miscellaneous SPI functions
 
 void SPI_SSIControl(SPI_RegDef_t *pSPIx, uint8_t state);						// Set / Clear Internal Slave Select
 void SPI_SSOEControl(SPI_RegDef_t *pSPIx, uint8_t state);						// Set / Reset SS Output Enable
 uint8_t SPI_GetFlagStatus(SPI_RegDef_t *pSPIx, uint8_t flagName);				// Check status of a register
 
-// IRQ Configuration and ISR Handling
+// Data Send and Receive
+
+void SPI_SendData(SPI_RegDef_t *pSPIx, uint8_t *pTXBuffer, uint32_t len);		// Send Data
+void SPI_ReceiveData(SPI_RegDef_t *pSPIx, uint8_t *pRXBuffer, uint32_t len);	// Receive Data
+uint8_t SPI_SendDataIRQ(SPI_Handle_t *pSPIHandle, uint8_t *pTXBuffer, uint32_t len);	// IRQ based Send Data
+uint8_t SPI_ReceiveDataIRQ(SPI_Handle_t *pSPIHandle, uint8_t *pRXBuffer, uint32_t len);	// IRQ based Receive Data
+
+// IRQ Configuration and IRQ Handling
 
 void SPI_IRQConfig(uint8_t irqNumber, uint8_t state);							// Configure IRQ
 void SPI_IRQPriorityConfig(uint8_t irqNumber, uint8_t irqPriority);				// Configure IRQ Priority
-void SPI_IRQReset(SPI_Handle_t *pSPIHandle);									// Reset IRQ
+void SPI_IRQHandle(SPI_Handle_t *pSPIHandle);									// Handle SPI IRQ
+void SPI_ClearOVRFlag(SPI_Handle_t *pSPIHandle);								// Clear overrun error flag
+void SPI_CloseTransmission(SPI_Handle_t *pSPIHandle);							// End SPI Tx
+void SPI_CloseReception(SPI_Handle_t *pSPIHandle);								// End SPI Rx
 
+// IRQ helper functions
+static void SPI_TxIRQHandle(SPI_Handle_t *pSPIHandle);							// Handle SPI IRQ Transmit
+static void SPI_RxIRQHandle(SPI_Handle_t *pSPIHandle);							// Handle SPI IRQ Receive
+static void SPI_OVRIRQHandle(SPI_Handle_t *pSPIHandle);							// Handle SPI IRQ Overrun Error
+
+// Application Callbacks
+void SPI_ApplicationEventCallback(SPI_Handle_t *pSPIHandle, uint8_t event);		// SPI IRQ Event Callback
 
 #endif /* INC_STM32F407XX_SPI_H_ */

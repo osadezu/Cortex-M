@@ -8,15 +8,7 @@
 - [x] SYSCFG _(Partially, for EXTI configuration registers)_
 - [x] EXTI _(Partially, for GPIO external interrupts)_
 - [x] RCC _(Partially, for implemented peripherals)_
-- [ ] SPI2
-- [ ] SPI3
-- [ ] USART2
-- [ ] USART3
-- [ ] UART4
-- [ ] UART5
-- [ ] I2C1
-- [ ] I2C2
-- [ ] I2C3
-- [ ] USART1
-- [ ] USART6
-- [ ] SPI1
+- [x] SPI
+- [ ] I2C
+- [ ] UART
+- [ ] USART
