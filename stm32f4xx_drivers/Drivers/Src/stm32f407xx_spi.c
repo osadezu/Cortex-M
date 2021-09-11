@@ -7,6 +7,12 @@
 
 #include "stm32f407xx_spi.h"
 
+// Static IRQ helper function prototypes
+
+static void SPI_TxIRQHandle(SPI_Handle_t *pSPIHandle);							// Handle SPI IRQ Transmit
+static void SPI_RxIRQHandle(SPI_Handle_t *pSPIHandle);							// Handle SPI IRQ Receive
+static void SPI_OVRIRQHandle(SPI_Handle_t *pSPIHandle);							// Handle SPI IRQ Overrun Error
+
 /******************************
  *  SPI Function Definitions  *
  ******************************/

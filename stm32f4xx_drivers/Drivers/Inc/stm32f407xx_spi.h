@@ -113,7 +113,6 @@ typedef struct {
 
 void SPI_ClkCtrl(SPI_RegDef_t *pSPIx, uint8_t state);							// SPI Clock Enable / Disable
 
-
 // Peripheral Initialize, De-initialize and Enable
 
 void SPI_Init(SPI_Handle_t *pSPIHandle);										// Initialize peripheral
@@ -126,6 +125,9 @@ void SPI_Control(SPI_RegDef_t *pSPIx, uint8_t state);							// Peripheral Enable
 void SPI_SSIControl(SPI_RegDef_t *pSPIx, uint8_t state);						// Set / Clear Internal Slave Select
 void SPI_SSOEControl(SPI_RegDef_t *pSPIx, uint8_t state);						// Set / Reset SS Output Enable
 uint8_t SPI_GetFlagStatus(SPI_RegDef_t *pSPIx, uint8_t flagName);				// Check status of a register
+void SPI_ClearOVRFlag(SPI_Handle_t *pSPIHandle);								// Clear overrun error flag
+void SPI_CloseTransmission(SPI_Handle_t *pSPIHandle);							// End SPI Tx
+void SPI_CloseReception(SPI_Handle_t *pSPIHandle);								// End SPI Rx
 
 // Data Send and Receive
 
@@ -139,16 +141,9 @@ uint8_t SPI_ReceiveDataIRQ(SPI_Handle_t *pSPIHandle, uint8_t *pRXBuffer, uint32_
 void SPI_IRQConfig(uint8_t irqNumber, uint8_t state);							// Configure IRQ
 void SPI_IRQPriorityConfig(uint8_t irqNumber, uint8_t irqPriority);				// Configure IRQ Priority
 void SPI_IRQHandle(SPI_Handle_t *pSPIHandle);									// Handle SPI IRQ
-void SPI_ClearOVRFlag(SPI_Handle_t *pSPIHandle);								// Clear overrun error flag
-void SPI_CloseTransmission(SPI_Handle_t *pSPIHandle);							// End SPI Tx
-void SPI_CloseReception(SPI_Handle_t *pSPIHandle);								// End SPI Rx
-
-// IRQ helper functions
-static void SPI_TxIRQHandle(SPI_Handle_t *pSPIHandle);							// Handle SPI IRQ Transmit
-static void SPI_RxIRQHandle(SPI_Handle_t *pSPIHandle);							// Handle SPI IRQ Receive
-static void SPI_OVRIRQHandle(SPI_Handle_t *pSPIHandle);							// Handle SPI IRQ Overrun Error
 
 // Application Callbacks
+
 void SPI_ApplicationEventCallback(SPI_Handle_t *pSPIHandle, uint8_t event);		// SPI IRQ Event Callback
 
 #endif /* INC_STM32F407XX_SPI_H_ */
