@@ -141,8 +141,8 @@ void SPI_Control(SPI_RegDef_t *pSPIx, uint8_t state)
 	}
 	else if (state == DISABLE)
 	{
-		while(SPI_GetFlagStatus(pSPIx, SPI_TXE_FLAG) == FLAG_CLEAR);	// Wait for TXE = 1
-		while(SPI_GetFlagStatus(pSPIx, SPI_BSY_FLAG) == FLAG_SET);		// Wait for BSY = 0
+		while(SPI_GetFlagStatus(pSPIx, SPI_FLAG_TXE) == FLAG_CLEAR);	// Wait for TXE = 1
+		while(SPI_GetFlagStatus(pSPIx, SPI_FLAG_BSY) == FLAG_SET);		// Wait for BSY = 0
 		pSPIx->CR1 &= ~(1 << SPI_CR1_SPE);								// Clear SPE
 	}
 }
@@ -188,13 +188,13 @@ void SPI_SSOEControl(SPI_RegDef_t *pSPIx, uint8_t state)
 /** @brief 		Check status of a register
  *
  * @param[in] 	*pSPIx		SPI peripheral base address
- * @param[in] 	flagName	Pointer to data being sent
+ * @param[in] 	flagName	Bit position to check in register
  *
- * @return		none
+ * @return		uint8_t		Flag status
  */
-uint8_t SPI_GetFlagStatus(SPI_RegDef_t *pSPIx, uint8_t flagName)
+uint8_t SPI_GetFlagStatus(SPI_RegDef_t *pSPIx, uint8_t flagPosition)
 {
-	if(pSPIx->SR & flagName)
+	if(pSPIx->SR & flagPosition)
 	{
 		return FLAG_SET;
 	}
@@ -215,7 +215,7 @@ void SPI_SendData(SPI_RegDef_t *pSPIx, uint8_t *pTXBuffer, uint32_t len)
 {
 	while(len > 0)
 	{
-		if(SPI_GetFlagStatus(pSPIx, SPI_TXE_FLAG) == FLAG_SET) // Proceed if transmit buffer is empty
+		if(SPI_GetFlagStatus(pSPIx, SPI_FLAG_TXE) == FLAG_SET) // Proceed if transmit buffer is empty
 		{
 			if (pSPIx->CR1 & (1 << SPI_CR1_DFF)) // 16-bit data
 			{
@@ -247,7 +247,7 @@ void SPI_ReceiveData(SPI_RegDef_t *pSPIx, uint8_t *pRXBuffer, uint32_t len)
 {
 	while(len > 0)
 	{
-		if(SPI_GetFlagStatus(pSPIx, SPI_RXNE_FLAG) == FLAG_SET) // Proceed if receive buffer has data
+		if(SPI_GetFlagStatus(pSPIx, SPI_FLAG_RXNE) == FLAG_SET) // Proceed if receive buffer has data
 		{
 			if (pSPIx->CR1 & (1 << SPI_CR1_DFF)) // 16-bit data
 			{
@@ -373,7 +373,7 @@ void SPI_IRQHandle(SPI_Handle_t *pSPIHandle)
  * @param[in] 	*pTXBuffer	Pointer to data being sent
  * @param[in] 	len			Number of bytes to send
  *
- * @return		none
+ * @return		uint8_t		Transmit state
  *
  */
 uint8_t SPI_SendDataIRQ(SPI_Handle_t *pSPIHandle, uint8_t *pTXBuffer, uint32_t len)
@@ -404,7 +404,7 @@ uint8_t SPI_SendDataIRQ(SPI_Handle_t *pSPIHandle, uint8_t *pTXBuffer, uint32_t l
  * @param[in] 	*pTXBuffer	Pointer to store received data
  * @param[in] 	len			Number of bytes to receive
  *
- * @return		none
+ * @return		uint8_t		Receive state
  *
  */
 uint8_t SPI_ReceiveDataIRQ(SPI_Handle_t *pSPIHandle, uint8_t *pRXBuffer, uint32_t len)
@@ -492,10 +492,9 @@ static void SPI_OVRIRQHandle(SPI_Handle_t *pSPIHandle)
 void SPI_ClearOVRFlag(SPI_Handle_t *pSPIHandle)
 {
 	uint8_t touch;
-	touch = pSPIHandle->pSPIx->DR;	// Touch registers but no need to do anything with the value
+	touch = pSPIHandle->pSPIx->DR;	// Touch registers but no need to do anything with the values
 	touch = pSPIHandle->pSPIx->SR;	// These two reads clear OVR flag
 	(void) touch;
-	// TODO: Check disassembly to verify the above causes correct behavior
 }
 
 /** @brief 		End SPI Tx

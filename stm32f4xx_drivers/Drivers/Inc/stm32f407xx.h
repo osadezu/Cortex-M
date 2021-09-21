@@ -65,6 +65,9 @@ typedef struct {
 #define PRI_BITS		4				// Priority bits implemented by the MCU
 #define PRI_LEVELS		16				// Priority levels implemented by the MCU
 
+#define HSI_CLK_FREQ	16000000U		// 16 MHz internal RC oscillator
+#define HSE_CLK_FREQ	8000000U		//  8 MHz crystal oscillator in discovery board
+
 
 // Flash and SRAM Base Addresses
 
@@ -203,6 +206,20 @@ typedef struct {
 } SPI_RegDef_t;
 
 
+typedef struct {
+	volatile uint32_t CR1;			// +0x00 I2C Control register 1
+	volatile uint32_t CR2;			// +0x04 I2C Control register 2
+	volatile uint32_t OAR1;			// +0x08 I2C Own address register 1
+	volatile uint32_t OAR2;			// +0x0C I2C Own address register 2
+	volatile uint32_t DR;			// +0x10 I2C Data Register
+	volatile uint32_t SR1;			// +0x14 I2C Status Register 1
+	volatile uint32_t SR2;			// +0x18 I2C Status Register 2
+	volatile uint32_t CCR;			// +0x1C I2C Clock Control Register
+	volatile uint32_t TRISE;		// +0x20 I2C TRISE Register
+	volatile uint32_t FLTR;			// +0x24 I2C FLTR Register
+} I2C_RegDef_t;
+
+
 // Peripheral Definitions
 
 #define RCC 			((RCC_RegDef_t*)RCC_BASE)
@@ -224,6 +241,10 @@ typedef struct {
 #define SPI1			((SPI_RegDef_t*)SPI1_BASE)
 #define SPI2			((SPI_RegDef_t*)SPI2_BASE)
 #define SPI3			((SPI_RegDef_t*)SPI3_BASE)
+
+#define I2C1			((I2C_RegDef_t*)I2C1_BASE)
+#define I2C2			((I2C_RegDef_t*)I2C2_BASE)
+#define I2C3			((I2C_RegDef_t*)I2C3_BASE)
 
 
 // Peripheral Clock Enable / Disable Macros
@@ -295,6 +316,9 @@ typedef struct {
 #define SPI2_RST()		do{(RCC->APB1RSTR |= (1 << 14)); (RCC->APB1RSTR &= ~(1 << 14));} while(0)
 #define SPI3_RST()		do{(RCC->APB2RSTR |= (1 << 15)); (RCC->APB2RSTR &= ~(1 << 15));} while(0)
 
+#define I2C1_RST()		do{(RCC->APB1RSTR |= (1 << 21)); (RCC->APB1RSTR &= ~(1 << 21));} while(0)
+#define I2C2_RST()		do{(RCC->APB1RSTR |= (1 << 22)); (RCC->APB1RSTR &= ~(1 << 22));} while(0)
+#define I2C3_RST()		do{(RCC->APB1RSTR |= (1 << 23)); (RCC->APB1RSTR &= ~(1 << 23));} while(0)
 
 // IRQ Numbers
 
@@ -331,6 +355,14 @@ typedef struct {
 
 
 // Peripheral Register Field Definitions
+
+// RCC clock configuration
+
+#define RCC_CFGR_SW			0		// 1:0 System clock switch
+#define RCC_CFGR_SWS		2		// 3:2 System clock switch status
+#define RCC_CFGR_HPRE		4		// 7:4 AHB Prescaler
+#define RCC_CFGR_PPRE1		10		// 12:10 APB Low speed prescaler (APB1)
+#define RCC_CFGR_PPRE2		13		// 15:13 APB high-speed prescaler (APB2)
 
 // SPI control register 1
 
@@ -372,10 +404,87 @@ typedef struct {
 #define SPI_SR_FRE			8		// 8: Frame format error
 
 
-// Return number code for GPIO port
+// I2C control register 1
+
+#define I2C_CR1_PE			0		// 0: Peripheral enable
+#define I2C_CR1_SMBUS		1		// 1: SMBus mode
+									// 2: Reserved
+#define I2C_CR1_SMBTYPE		3		// 3: SMBus type
+#define I2C_CR1_ENARP		4		// 4: ARP enable
+#define I2C_CR1_ENPEC		5		// 5: PEC enable
+#define I2C_CR1_ENGC		6		// 6: General call enable
+#define I2C_CR1_NOSTRETCH	7		// 7: Clock stretching disable (slave mode)
+#define I2C_CR1_START		8		// 8: Start generation
+#define I2C_CR1_STOP		9		// 9: Stop generation
+#define I2C_CR1_ACK			10		// 10: Acknowledge enable
+#define I2C_CR1_POS			11		// 11: Acknowledge/PEC position (for data reception)
+#define I2C_CR1_PEC			12		// 12: Packet error checking
+#define I2C_CR1_ALERT		13		// 13: SMBus alert
+									// 14: Reserved
+#define I2C_CR1_SWRST		15		// 15: Software reset
+
+// I2C control register 2
+
+#define I2C_CR2_FREQ		0		// 5:0 Peripheral clock frequency
+									// 7:6 Reserved
+#define I2C_CR2_ITERREN		8		// 8: Error interrupt enable
+#define I2C_CR2_ITEVTEN		9		// 9: Event interrupt enable
+#define I2C_CR2_ITBUFEN		10		// 10: Buffer interrupt enable
+#define I2C_CR2_DMAEN		11		// 11: DMA requests enable
+#define I2C_CR2_LAST		12		// 12: DMA last transfer
+
+// I2C own address register 1
+
+#define I2C_OAR1_ADD_0		0		// 0: Interface Address (10-bit mode only)
+#define I2C_OAR1_ADD		1		// 7:1 Interface Address
+#define I2C_OAR1_ADD_98		8		// 9:8 Interface Address (10-bit mode only)
+									// 13:10 Reserved
+#define I2C_OAR1_BIT14		14		// 14: Should always be kept at 1 by software
+#define I2C_OAR1_ADDMODE	15		// 15: Addressing mode
+
+// I2C status register 1
+
+#define I2C_SR1_SB			0		// 0: Start bit (Master mode)
+#define I2C_SR1_ADDR		1		// 1: Address sent (master mode)/matched (slave mode)
+#define I2C_SR1_BTF			2		// 2: Byte transfer finished
+#define I2C_SR1_ADD10		3		// 3: 10-bit header sent (master mode)
+#define I2C_SR1_STOPF		4		// 4: Stop detection (slave mode)
+									// 5: Reserved
+#define I2C_SR1_RXNE		6		// 6: Data register not empty (receivers)
+#define I2C_SR1_TXE			7		// 7: Data register empty (transmitters)
+#define I2C_SR1_BERR		8		// 8: Bus error
+#define I2C_SR1_ARLO		9		// 9: Arbitration lost (master mode)
+#define I2C_SR1_AF			10		// 10: Acknowledge failure
+#define I2C_SR1_OVR			11		// 11: Overrun/underrun
+#define I2C_SR1_PECERR		12		// 12: PEC error in reception
+									// 13: Reserved
+#define I2C_SR1_TIMEOUT		14		// 14: Timeout or Tlow error
+#define I2C_SR1_SMBALERT	15		// 15: SMBus alert
+
+// I2C status register 2
+
+#define I2C_SR2_MSL			0		// 0: Master/slave
+#define I2C_SR2_BUSY		1		// 1: Bus busy
+#define I2C_SR2_TRA			2		// 2: Transmitter/receiver
+									// 3: Reserved
+#define I2C_SR2_GENCALL		4		// 4: General call address (slave mode)
+#define I2C_SR2_SMBDEFAULT	5		// 5: SMBus device default address
+#define I2C_SR2_SMBHOST		6		// 6: SMBus host header (slave mode)
+#define I2C_SR2_DUALF		7		// 7: Dual flag (slave mode)
+#define I2C_SR2_PEC			8		// 15:8 Packet error checking
+
+// I2C clock control register
+
+#define I2C_CCR_CCR			0		// 11:0 Clock control register in Fm/Sm mode (master mode)
+									// 12:13 Reserved
+#define I2C_CCR_DUTY		14		// 14: Fm mode duty cycle
+#define I2C_CCR_FS			15		// 15: I2C master mode selection
+
+// Number code for GPIO port
 // Macro resolves to 0:8 value for PA:PI selection
 
 #define GPIO_PORT_NUMBER(x)		(((uint32_t*)(x) - (uint32_t*)(GPIOA)) >> 8)
+// TODO: Is this safe? (Fully hardware implementation dependent).
 
 
 #endif /* INC_STM32F407XX_H_ */

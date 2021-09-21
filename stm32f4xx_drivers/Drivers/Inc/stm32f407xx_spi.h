@@ -54,16 +54,15 @@
 
 
 // SPI SR FLags
-#define SPI_RXNE_FLAG	(1 << SPI_SR_RXNE)		// 0: Receive buffer not empty
-#define SPI_TXE_FLAG	(1 << SPI_SR_TXE)		// 1: Transmit buffer empty
-#define SPI_CHSIDE_FLAG	(1 << SPI_SR_CHSIDE)	// 2: Channel side
-#define SPI_UDR_FLAG	(1 << SPI_SR_UDR)		// 3: Underrun flag
-#define SPI_CRCERR_FLAG	(1 << SPI_SR_CRCERR)	// 4: CRC error flag
-#define SPI_MODF_FLAG	(1 << SPI_SR_MODF)		// 5: Mode fault
-#define SPI_OVR_FLAG	(1 << SPI_SR_OVR)		// 6: Overrun flag
-#define SPI_BSY_FLAG	(1 << SPI_SR_BSY)		// 7: Busy flag
-#define SPI_FRE_FLAG	(1 << SPI_SR_FRE)		// 8: Frame format error
-
+#define SPI_FLAG_RXNE	(1 << SPI_SR_RXNE)		// 0: Receive buffer not empty
+#define SPI_FLAG_TXE	(1 << SPI_SR_TXE)		// 1: Transmit buffer empty
+#define SPI_FLAG_CHSIDE	(1 << SPI_SR_CHSIDE)	// 2: Channel side
+#define SPI_FLAG_UDR	(1 << SPI_SR_UDR)		// 3: Underrun flag
+#define SPI_FLAG_CRCERR	(1 << SPI_SR_CRCERR)	// 4: CRC error flag
+#define SPI_FLAG_MODF	(1 << SPI_SR_MODF)		// 5: Mode fault
+#define SPI_FLAG_OVR	(1 << SPI_SR_OVR)		// 6: Overrun flag
+#define SPI_FLAG_BSY	(1 << SPI_SR_BSY)		// 7: Busy flag
+#define SPI_FLAG_FRE	(1 << SPI_SR_FRE)		// 8: Frame format error
 
 //SPI IRQ States
 #define SPI_READY		0
@@ -124,7 +123,7 @@ void SPI_Control(SPI_RegDef_t *pSPIx, uint8_t state);							// Peripheral Enable
 
 void SPI_SSIControl(SPI_RegDef_t *pSPIx, uint8_t state);						// Set / Clear Internal Slave Select
 void SPI_SSOEControl(SPI_RegDef_t *pSPIx, uint8_t state);						// Set / Reset SS Output Enable
-uint8_t SPI_GetFlagStatus(SPI_RegDef_t *pSPIx, uint8_t flagName);				// Check status of a register
+uint8_t SPI_GetFlagStatus(SPI_RegDef_t *pSPIx, uint8_t flagPosition);			// Check status of a register
 void SPI_ClearOVRFlag(SPI_Handle_t *pSPIHandle);								// Clear overrun error flag
 void SPI_CloseTransmission(SPI_Handle_t *pSPIHandle);							// End SPI Tx
 void SPI_CloseReception(SPI_Handle_t *pSPIHandle);								// End SPI Rx
