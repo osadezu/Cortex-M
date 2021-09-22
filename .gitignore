@@ -58,3 +58,24 @@ local.properties
 # Uncomment this line if you wish to ignore the project description file.
 # Typically, this file would be tracked if it contains build/dependency configurations:
 #.project
+
+# Manually added
+001HelloWorld/
+002OperationalModes/
+003AccessLevels/
+004T-bit/
+005Stack/
+006IRQ_USART/
+007IRQ_Priority/
+008FaultExceptions/
+009SVCall/
+010SVCTask/
+012TaskScheduler_bare_metal/20210804 Build and OpenOCD Terminal Session.txt
+012TaskScheduler_bare_metal/20210804 GDB and Telnet Terminal Session.txt
+101HSEClockTest/
+stm32f4xx_drivers/.project
+stm32f4xx_drivers/Debug/
+stm32f4xx_drivers/STM32F407VGTX_FLASH.ld
+stm32f4xx_drivers/STM32F407VGTX_RAM.ld
+stm32f4xx_drivers/Src_Arduino/
+stm32f4xx_drivers/Startup/
