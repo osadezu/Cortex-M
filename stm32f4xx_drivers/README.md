@@ -9,6 +9,6 @@
 - [x] EXTI _(Partially, for GPIO external interrupts)_
 - [x] RCC _(Partially, for implemented peripherals)_
 - [x] SPI
-- [ ] I2C
+- [x] I2C
 - [ ] UART
 - [ ] USART

@@ -81,19 +81,17 @@ int main (void)
 	i2c_config();
 	button_config();
 
+	// Enable SPI Peripheral
+	I2C_Control(I2C1, ENABLE);
+
 	while(1)
 	{
 		while(!GPIO_ReadPin(GPIOA, GPIO_PIN_0));	// Wait for button
 		delay(500000); 								// Button debouncing
 
-		// Enable SPI Peripheral
-		I2C_Control(I2C1, ENABLE);
-
 		// Send data
 		I2C_MasterSendData(&i2c1_handle, DEST_ADDR, (uint8_t*)user_data, strlen(user_data), I2C_WITH_STOP);
 
-		// Enable SPI Peripheral
-		I2C_Control(I2C1, DISABLE);
 	}
 
 	return 0;

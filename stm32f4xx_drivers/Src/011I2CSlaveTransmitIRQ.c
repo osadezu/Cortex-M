@@ -1,7 +1,7 @@
 /*
- * 009I2CMasterReceive.c
+ * 011I2CSlaveTransmitIRQ.c
  *
- *  Created on: Sep 21, 2021
+ *  Created on: Sep 27, 2021
  *      Author: OSdZ
  */
 
@@ -20,12 +20,13 @@
  */
 
 #define MY_ADDR			0x65
-#define DEST_ADDR		0x68
 
 #define CMD_GET_LEN		0x51
 #define CMD_GET_DATA	0x52
 
 I2C_Handle_t i2c1_handle;
+
+char transmit_data[32] = "Slave sending a test string!";
 
 void delay(uint32_t x)
 {
@@ -60,7 +61,7 @@ void i2c_config(void)
 
 	i2c1_handle.I2C_Config.I2C_AckControl = I2C_ACK_EN;
 	i2c1_handle.I2C_Config.I2C_SCLSpeed = I2C_SCL_SM;
-	i2c1_handle.I2C_Config.I2C_DeviceAddress = MY_ADDR;		// Doesn't matter for this master example
+	i2c1_handle.I2C_Config.I2C_DeviceAddress = MY_ADDR;
 	i2c1_handle.I2C_Config.I2C_FMDutyCycle = I2C_FM_DUTY_2;	// Doesn't matter for Sm
 
 	I2C_Init(&i2c1_handle);
@@ -79,9 +80,6 @@ void button_config(void)
 
 int main (void)
 {
-	uint8_t command, len;
-	uint8_t receive_buffer[32];
-
 	gpio_config();
 	i2c_config();
 	button_config();
@@ -89,26 +87,64 @@ int main (void)
 	// Enable SPI Peripheral
 	I2C_Control(I2C1, ENABLE);
 
-	while(1)
+	// Enable interrupts
+	I2C_IRQConfig(IRQ_NO_I2C1_EV, ENABLE);
+	I2C_IRQConfig(IRQ_NO_I2C1_ER, ENABLE);
+
+	// Enable IRQ events
+	I2C_CallbackEventsControl(I2C1, ENABLE);
+
+
+	while(1);
+}
+
+void I2C1_EV_IRQHandler(void)
+{
+	I2C_HandleEventIRQ(&i2c1_handle);
+}
+
+void I2C1_ER_IRQHandler(void)
+{
+	I2C_HandleErrorIRQ(&i2c1_handle);
+}
+
+void I2C_ApplicationEventCallback(I2C_Handle_t *pI2CHandle, uint8_t event)
+{
+	static uint8_t command = 0xff;
+	static uint8_t pos = 0;
+
+	if (event == I2C_EVENT_DATA_RCV)
 	{
-		while(!GPIO_ReadPin(GPIOA, GPIO_PIN_0));	// Wait for button
-		delay(500000); 								// Button debouncing
+		// Receive instruction from master
+		command = I2C_SlaveReceiveData(pI2CHandle->pI2Cx);
 
-		// Check how many bytes will be sent
-		command = CMD_GET_LEN;
-		I2C_MasterSendData(&i2c1_handle, DEST_ADDR, &command, 1, I2C_NO_STOP);
-		I2C_MasterReceiveData(&i2c1_handle, DEST_ADDR, &len, 1, I2C_NO_STOP);
+		printf("Received instruction: %X\n", command);
+	}
+	else if (event == I2C_EVENT_DATA_REQ)
+	{
+		if (command == CMD_GET_LEN)
+		{
+			I2C_SlaveSendData(pI2CHandle->pI2Cx, strlen(transmit_data));
 
-		// Request data
-		command = CMD_GET_DATA;
-		I2C_MasterSendData(&i2c1_handle, DEST_ADDR, &command, 1, I2C_NO_STOP);
-		I2C_MasterReceiveData(&i2c1_handle, DEST_ADDR, receive_buffer, len, I2C_WITH_STOP);
+			printf("Sent length.\n");
+		}
+		else if (command == CMD_GET_DATA)
+		{
+			I2C_SlaveSendData(pI2CHandle->pI2Cx, transmit_data[pos++]);
 
-		receive_buffer[len] = '\0'; // Terminate string with null
+			printf("Sent data.\n");
+		}
+	}
+	else if (event == I2C_ERROR_AF)
+	{
+		printf("NACK.\n");
 
-		printf("%s\n", (char*)receive_buffer);
+		command = 0xff;
+		pos = 0;
 
 	}
-
-	return 0;
+	else if (event == I2C_EVENT_STOP)
+	{
+		printf("Stop detected.\n");
+	}
 }

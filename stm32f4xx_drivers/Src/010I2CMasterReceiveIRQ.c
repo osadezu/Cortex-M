@@ -1,7 +1,7 @@
 /*
- * 009I2CMasterReceive.c
+ * 010I2CMasterReceiveIRQ.c
  *
- *  Created on: Sep 21, 2021
+ *  Created on: Sep 24, 2021
  *      Author: OSdZ
  */
 
@@ -26,6 +26,7 @@
 #define CMD_GET_DATA	0x52
 
 I2C_Handle_t i2c1_handle;
+uint8_t rxFlag;
 
 void delay(uint32_t x)
 {
@@ -82,12 +83,18 @@ int main (void)
 	uint8_t command, len;
 	uint8_t receive_buffer[32];
 
+	receive_buffer[0] = '\0';
+
 	gpio_config();
 	i2c_config();
 	button_config();
 
 	// Enable SPI Peripheral
 	I2C_Control(I2C1, ENABLE);
+
+	// Enable interrupts
+	I2C_IRQConfig(IRQ_NO_I2C1_EV, ENABLE);
+	I2C_IRQConfig(IRQ_NO_I2C1_ER, ENABLE);
 
 	while(1)
 	{
@@ -96,19 +103,60 @@ int main (void)
 
 		// Check how many bytes will be sent
 		command = CMD_GET_LEN;
-		I2C_MasterSendData(&i2c1_handle, DEST_ADDR, &command, 1, I2C_NO_STOP);
-		I2C_MasterReceiveData(&i2c1_handle, DEST_ADDR, &len, 1, I2C_NO_STOP);
+
+		while(I2C_MasterSendDataIRQ(&i2c1_handle, DEST_ADDR, &command, 1, I2C_NO_STOP) != I2C_READY);
+		while(I2C_MasterReceiveDataIRQ(&i2c1_handle, DEST_ADDR, &len, 1, I2C_NO_STOP) != I2C_READY);
 
 		// Request data
 		command = CMD_GET_DATA;
-		I2C_MasterSendData(&i2c1_handle, DEST_ADDR, &command, 1, I2C_NO_STOP);
-		I2C_MasterReceiveData(&i2c1_handle, DEST_ADDR, receive_buffer, len, I2C_WITH_STOP);
+		rxFlag = RESET;
 
+		while(I2C_MasterSendDataIRQ(&i2c1_handle, DEST_ADDR, &command, 1, I2C_NO_STOP) != I2C_READY);
+		while(I2C_MasterReceiveDataIRQ(&i2c1_handle, DEST_ADDR, receive_buffer, len, I2C_WITH_STOP) != I2C_READY);
+
+		while(rxFlag != SET);		// Hang until Rx is done
 		receive_buffer[len] = '\0'; // Terminate string with null
 
 		printf("%s\n", (char*)receive_buffer);
 
-	}
+		rxFlag = RESET;
 
-	return 0;
+	}
+}
+
+void I2C1_EV_IRQHandler(void)
+{
+	I2C_HandleEventIRQ(&i2c1_handle);
+}
+
+void I2C1_ER_IRQHandler(void)
+{
+	I2C_HandleErrorIRQ(&i2c1_handle);
+}
+
+void I2C_ApplicationEventCallback(I2C_Handle_t *pI2CHandle, uint8_t event)
+{
+	if (event == I2C_EVENT_TX_DONE)
+	{
+		printf("Transmission complete.\n");
+	}
+	else if (event == I2C_EVENT_RX_DONE)
+	{
+		printf("Reception complete.\n");
+
+		rxFlag = SET;
+	}
+	else if (event == I2C_ERROR_AF)
+	{
+		printf("Error: ACK Failure.\n");
+
+		// Close communication
+		I2C_CloseTransmission(pI2CHandle);
+
+		// Generate Stop
+		I2C_IssueStop(pI2CHandle->pI2Cx);
+
+		// Hang here
+		while(1);
+	}
 }
