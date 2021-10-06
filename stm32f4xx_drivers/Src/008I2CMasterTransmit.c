@@ -37,7 +37,7 @@ void gpio_config(void)
 	i2c1_gpio.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_ALTFUN;
 	i2c1_gpio.GPIO_PinConfig.GPIO_PinAltFunMode = GPIO_PIN_AF4;
 	i2c1_gpio.GPIO_PinConfig.GPIO_PinOType = GPIO_OTYPE_OD;
-	i2c1_gpio.GPIO_PinConfig.GPIO_PinPuPd = GPIO_PUPD_PU;
+	i2c1_gpio.GPIO_PinConfig.GPIO_PinPuPd = GPIO_PUPD_NO;
 	i2c1_gpio.GPIO_PinConfig.GPIO_PinOSpeed = GPIO_OSPEED_HI;
 
 	// SCL

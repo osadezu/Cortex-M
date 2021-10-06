@@ -262,7 +262,9 @@ void I2C_MasterSendData(I2C_Handle_t *pI2CHandle, uint8_t slaveAddress, uint8_t 
 
 	// Generate stop condition, unless application will do repeat start
 	if (withStop == I2C_WITH_STOP)
+	{
 		I2C_IssueStop(pI2CHandle->pI2Cx);
+	}
 }
 
 /** @brief 		Master receive data
@@ -540,6 +542,12 @@ void I2C_CloseReception(I2C_Handle_t *pI2CHandle)
 	pI2CHandle->RxSize = 0;
 	pI2CHandle->TxRxState = I2C_READY;
 
+	// Enable Ack bit if configured
+	if (pI2CHandle->I2C_Config.I2C_AckControl == I2C_ACK_EN)
+	{
+		I2C_AckControl(pI2CHandle->pI2Cx, ENABLE);
+	}
+
 }
 
 /** @brief 		Enable or disable callback events for Slave mode
@@ -581,8 +589,9 @@ static void I2C_MasterHandleIRQ_RXNE(I2C_Handle_t *pI2CHandle)
 {
 	if (pI2CHandle->RxSize == 1)	// Receiving single byte
 	{
-		// TODO: Should ACK be disabled before reading?
+		// ACK is disabled by I2C_ClearADDRFlag() for 1 byte RX
 		*pI2CHandle->pRxBuffer = pI2CHandle->pI2Cx->DR;
+		pI2CHandle->RxLen--;
 	}
 
 	if (pI2CHandle->RxSize > 1)	// Receiving more than one byte

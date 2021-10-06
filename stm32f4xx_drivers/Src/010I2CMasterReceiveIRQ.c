@@ -109,9 +109,12 @@ int main (void)
 
 		// Request data
 		command = CMD_GET_DATA;
-		rxFlag = RESET;
 
 		while(I2C_MasterSendDataIRQ(&i2c1_handle, DEST_ADDR, &command, 1, I2C_NO_STOP) != I2C_READY);
+
+		// TODO: Print from RX_DONE callback to remove this workaround
+		rxFlag = RESET;
+
 		while(I2C_MasterReceiveDataIRQ(&i2c1_handle, DEST_ADDR, receive_buffer, len, I2C_WITH_STOP) != I2C_READY);
 
 		while(rxFlag != SET);		// Hang until Rx is done
