@@ -81,7 +81,7 @@ int main (void)
 	i2c_config();
 	button_config();
 
-	// Enable SPI Peripheral
+	// Enable I2C Peripheral
 	I2C_Control(I2C1, ENABLE);
 
 	while(1)

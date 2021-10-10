@@ -678,8 +678,7 @@ void I2C_HandleEventIRQ(I2C_Handle_t *pI2CHandle)
 		{
 			// Slave mode only
 			// STOPF is cleared by writing CR1 after reading SR1
-			pI2CHandle->pI2Cx->CR1 |= (1 << I2C_CR1_STOP);
-			// pI2CHandle->pI2Cx->CR1 |= 0x0000;
+			pI2CHandle->pI2Cx->CR1 |= 0x0000;
 
 			// Notify Application
 			I2C_ApplicationEventCallback(pI2CHandle, I2C_EVENT_STOP);

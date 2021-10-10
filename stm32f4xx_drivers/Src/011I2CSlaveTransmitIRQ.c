@@ -67,24 +67,12 @@ void i2c_config(void)
 	I2C_Init(&i2c1_handle);
 }
 
-void button_config(void)
-{
-	GPIO_Handle_t gpioButton;
-
-	gpioButton.pGPIOx = GPIOA;
-	gpioButton.GPIO_PinConfig.GPIO_PinNumber = GPIO_PIN_0; // PA0 is user button on Discovery board
-	gpioButton.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_IN;
-
-	GPIO_Init(&gpioButton);
-}
-
 int main (void)
 {
 	gpio_config();
 	i2c_config();
-	button_config();
 
-	// Enable SPI Peripheral
+	// Enable I2C Peripheral
 	I2C_Control(I2C1, ENABLE);
 
 	// Enable interrupts
@@ -94,6 +82,8 @@ int main (void)
 	// Enable IRQ events
 	I2C_CallbackEventsControl(I2C1, ENABLE);
 
+	// Enable ACKing
+	I2C_AckControl(I2C1, ENABLE);
 
 	while(1);
 }
@@ -132,7 +122,7 @@ void I2C_ApplicationEventCallback(I2C_Handle_t *pI2CHandle, uint8_t event)
 		{
 			I2C_SlaveSendData(pI2CHandle->pI2Cx, transmit_data[pos++]);
 
-			printf("Sent data.\n");
+			printf("Sent data: %d\n", pos-1);
 		}
 	}
 	else if (event == I2C_ERROR_AF)
